@@ -63,6 +63,39 @@ namespace Com.MM.Service.Warehouse.WebApi.Controllers.v1.InventoryControllers
                 return StatusCode(General.INTERNAL_ERROR_STATUS_CODE, Result);
             }
         }
+
+
+
+        [HttpGet("by-user/download")]
+        public IActionResult GetXls(string storageId, string itemName)
+        {
+
+            try
+            {
+                byte[] xlsInBytes;
+                //int offset = Convert.ToInt32(Request.Headers["x-timezone-offset"]);
+                //DateTime DateFrom = dateFrom == null ? new DateTime(1970, 1, 1) : Convert.ToDateTime(dateFrom);
+                //DateTime DateTo = dateTo == null ? DateTime.Now : Convert.ToDateTime(dateTo);
+                string filename;
+
+                var xls = facade.GenerateExcelReportByUser(storageId, itemName);
+
+
+                filename = String.Format("Repoort Monthly Stock{0}.xlsx", DateTime.UtcNow.ToString("dd-MMM-yyyy"));
+
+                xlsInBytes = xls.ToArray();
+                var file = File(xlsInBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", filename);
+                return file;
+
+            }
+            catch (Exception e)
+            {
+                Dictionary<string, object> Result =
+                    new ResultFormatter(ApiVersion, General.INTERNAL_ERROR_STATUS_CODE, e.Message)
+                    .Fail();
+                return StatusCode(General.INTERNAL_ERROR_STATUS_CODE, Result);
+            }
+        }
         #endregion
 
         #region By Search
@@ -120,6 +153,38 @@ namespace Com.MM.Service.Warehouse.WebApi.Controllers.v1.InventoryControllers
                     message = General.OK_MESSAGE,
                     statusCode = General.OK_STATUS_CODE
                 });
+            }
+            catch (Exception e)
+            {
+                Dictionary<string, object> Result =
+                    new ResultFormatter(ApiVersion, General.INTERNAL_ERROR_STATUS_CODE, e.Message)
+                    .Fail();
+                return StatusCode(General.INTERNAL_ERROR_STATUS_CODE, Result);
+            }
+        }
+
+
+        [HttpGet("by-movements/download")]
+        public IActionResult GetMovementXls(string storageId, string itemCode)
+        {
+
+            try
+            {
+                byte[] xlsInBytes;
+                //int offset = Convert.ToInt32(Request.Headers["x-timezone-offset"]);
+                //DateTime DateFrom = dateFrom == null ? new DateTime(1970, 1, 1) : Convert.ToDateTime(dateFrom);
+                //DateTime DateTo = dateTo == null ? DateTime.Now : Convert.ToDateTime(dateTo);
+                string filename;
+
+                var xls = facade.GenerateExcelReportByMovement(storageId, itemCode);
+
+
+                filename = String.Format("Report Movement Stock- {0}.xlsx", DateTime.UtcNow.ToString("dd-MMM-yyyy"));
+
+                xlsInBytes = xls.ToArray();
+                var file = File(xlsInBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", filename);
+                return file;
+
             }
             catch (Exception e)
             {
