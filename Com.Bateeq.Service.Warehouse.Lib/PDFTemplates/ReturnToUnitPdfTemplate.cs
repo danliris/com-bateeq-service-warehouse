@@ -75,13 +75,13 @@ namespace Com.Bateeq.Service.Warehouse.Lib.PDFTemplates
             PdfPCell cellInternNoteHeaderLeft = new PdfPCell() { Border = Rectangle.NO_BORDER, HorizontalAlignment = Element.ALIGN_LEFT };
             PdfPCell cellInternNoteHeaderRight = new PdfPCell() { Border = Rectangle.NO_BORDER, HorizontalAlignment = Element.ALIGN_LEFT };
 
-            cellInternNoteHeaderLeft.Phrase = new Phrase("PT. MAJOR MINOR KREASI NUSANTARA", bold_font1);
+            cellInternNoteHeaderLeft.Phrase = new Phrase("PT. PT EFRATA RETAILINDO", bold_font1);
             tableInternNoteHeader.AddCell(cellInternNoteHeaderLeft);
 
             cellInternNoteHeaderLeft.Phrase = new Phrase("No. Packing List" + "       : " + pkbjByUserViewModel.packingList, normal_font);
             tableInternNoteHeader.AddCell(cellInternNoteHeaderLeft);
 
-            cellInternNoteHeaderRight.Phrase = new Phrase("Equity Tower 15th Floor Suite C, SCBD Lot 9, Jl. Jenderal Sudirman Kav 52-53 Jakarta 12190, Indonesia", normal_font);
+            cellInternNoteHeaderRight.Phrase = new Phrase("Kel. Banaran, Kec. Grogol, Kab.Sukoharjo 57193 Jawa Tengah, Indonesia", normal_font);
             tableInternNoteHeader.AddCell(cellInternNoteHeaderRight);
 
             cellInternNoteHeaderLeft.Phrase = new Phrase("Password" + "                 : " + pkbjByUserViewModel.password, normal_font);
