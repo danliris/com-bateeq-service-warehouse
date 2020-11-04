@@ -15,7 +15,6 @@ namespace Com.Bateeq.Service.Warehouse.Lib.ViewModels.SpkDocsViewModel
         public dynamic domesticSale { get; set; }
         public string uom { get; set; }
         public dynamic quantity { get; set; }
-        public dynamic sendquantity { get; set; }
         public string articleRealizationOrder { get; set; }
         public dynamic domesticCOGS { get; set; }
     }

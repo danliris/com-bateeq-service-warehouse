@@ -46,13 +46,37 @@ namespace Com.Bateeq.Service.Warehouse.Lib.Facades
 
         public Tuple<List<SPKDocs>, int, Dictionary<string, string>> Read(int Page = 1, int Size = 25, string Order = "{}", string Keyword = null, string Filter = "{}")
         {
-            IQueryable<SPKDocs> Query = this.dbSet.Include(x=>x.Items);
+            IQueryable<SPKDocs> Query = this.dbSet.Include(x=>x.Items).Where(x => !x.PackingList.Contains("EFR-FN")); ;
             
             List<string> searchAttributes = new List<string>()
             {
                 "PackingList", "SourceName", "DestinationName"
             };
             
+            Query = QueryHelper<SPKDocs>.ConfigureSearch(Query, searchAttributes, Keyword);
+
+            Dictionary<string, string> FilterDictionary = JsonConvert.DeserializeObject<Dictionary<string, string>>(Filter);
+            Query = QueryHelper<SPKDocs>.ConfigureFilter(Query, FilterDictionary);
+
+            Dictionary<string, string> OrderDictionary = JsonConvert.DeserializeObject<Dictionary<string, string>>(Order);
+            Query = QueryHelper<SPKDocs>.ConfigureOrder(Query, OrderDictionary);
+
+            Pageable<SPKDocs> pageable = new Pageable<SPKDocs>(Query, Page - 1, Size);
+            List<SPKDocs> Data = pageable.Data.ToList<SPKDocs>();
+            int TotalData = pageable.TotalCount;
+
+            return Tuple.Create(Data, TotalData, OrderDictionary);
+        }
+
+        public Tuple<List<SPKDocs>, int, Dictionary<string, string>> ReadForUpload(int Page = 1, int Size = 25, string Order = "{}", string Keyword = null, string Filter = "{}")
+        {
+            IQueryable<SPKDocs> Query = this.dbSet.Include(x => x.Items).Where(x => x.PackingList.Contains("EFR-FN"));
+
+            List<string> searchAttributes = new List<string>()
+            {
+                "PackingList", "SourceName", "DestinationName"
+            };
+
             Query = QueryHelper<SPKDocs>.ConfigureSearch(Query, searchAttributes, Keyword);
 
             Dictionary<string, string> FilterDictionary = JsonConvert.DeserializeObject<Dictionary<string, string>>(Filter);
@@ -226,7 +250,6 @@ namespace Com.Bateeq.Service.Warehouse.Lib.Facades
                 Map(p => p.domesticSale).Index(5).TypeConverter<StringConverter>();
                 Map(p => p.uom).Index(6);
                 Map(p => p.quantity).Index(7).TypeConverter<StringConverter>();
-                Map(p => p.sendquantity).Index(7).TypeConverter<StringConverter>();
                 Map(p => p.articleRealizationOrder).Index(8);
                 Map(p => p.domesticCOGS).Index(9).TypeConverter<StringConverter>();
             }
@@ -478,7 +501,7 @@ namespace Com.Bateeq.Service.Warehouse.Lib.Facades
 
                         },
                         quantity = Convert.ToDouble(i.quantity),
-                        sendquantity = Convert.ToDouble(i.sendquantity),
+                        sendquantity = Convert.ToDouble(i.quantity),
                         remark = ""
                     });
                 }
@@ -499,7 +522,7 @@ namespace Com.Bateeq.Service.Warehouse.Lib.Facades
 
                         },
                         quantity = Convert.ToDouble(i.quantity),
-                        sendquantity = Convert.ToDouble(i.sendquantity),
+                        sendquantity = Convert.ToDouble(i.quantity),
                         remark = ""
                     });
                 }

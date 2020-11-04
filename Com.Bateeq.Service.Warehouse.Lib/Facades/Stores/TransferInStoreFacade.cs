@@ -84,6 +84,15 @@ namespace Com.Bateeq.Service.Warehouse.Lib.Facades.Stores
                         i.DestinationName = transferout.DestinationName;
                         i.DestinationCode = transferout.DestinationCode;
                     }
+                    else
+                    {
+                        i.SourceId = 0;
+                        i.SourceCode = "-";
+                        i.SourceName = "-";
+                        i.DestinationId = 0;
+                        i.DestinationName = "-";
+                        i.DestinationCode = "-";
+                    }
                 }
             }
 
