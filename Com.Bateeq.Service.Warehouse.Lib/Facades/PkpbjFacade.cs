@@ -226,6 +226,7 @@ namespace Com.Bateeq.Service.Warehouse.Lib.Facades
                 Map(p => p.domesticSale).Index(5).TypeConverter<StringConverter>();
                 Map(p => p.uom).Index(6);
                 Map(p => p.quantity).Index(7).TypeConverter<StringConverter>();
+                Map(p => p.sendquantity).Index(7).TypeConverter<StringConverter>();
                 Map(p => p.articleRealizationOrder).Index(8);
                 Map(p => p.domesticCOGS).Index(9).TypeConverter<StringConverter>();
             }
@@ -477,6 +478,7 @@ namespace Com.Bateeq.Service.Warehouse.Lib.Facades
 
                         },
                         quantity = Convert.ToDouble(i.quantity),
+                        sendquantity = Convert.ToDouble(i.sendquantity),
                         remark = ""
                     });
                 }
@@ -497,6 +499,7 @@ namespace Com.Bateeq.Service.Warehouse.Lib.Facades
 
                         },
                         quantity = Convert.ToDouble(i.quantity),
+                        sendquantity = Convert.ToDouble(i.sendquantity),
                         remark = ""
                     });
                 }
