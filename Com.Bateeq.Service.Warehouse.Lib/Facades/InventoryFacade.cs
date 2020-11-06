@@ -105,7 +105,7 @@ namespace Com.Bateeq.Service.Warehouse.Lib.Facades
         }
 
         #region Monitoring By User
-        public IQueryable<InventoriesReportViewModel> GetReportQuery(string storageId, string itemName)
+        public IQueryable<InventoriesReportViewModel> GetReportQuery(string storageId, string filter)
         {
             //DateTime DateFrom = dateFrom == null ? new DateTime(1970, 1, 1) : (DateTime)dateFrom;
             //DateTime DateTo = dateTo == null ? DateTime.Now : (DateTime)dateTo;
@@ -114,7 +114,8 @@ namespace Com.Bateeq.Service.Warehouse.Lib.Facades
                          where a.IsDeleted == false
                          //&& a.StorageId == Convert.ToInt64((string.IsNullOrWhiteSpace(storageId) ? a.StorageId.ToString() :  storageId))
                          && a.StorageCode == (string.IsNullOrWhiteSpace(storageId) ? a.StorageCode : storageId)
-                         && a.ItemName == (string.IsNullOrWhiteSpace(itemName) ? a.ItemName : itemName)
+                         && a.ItemName.Contains((string.IsNullOrWhiteSpace(filter) ? a.ItemName : filter))
+                         || a.ItemArticleRealizationOrder.Contains((string.IsNullOrWhiteSpace(filter) ? a.ItemArticleRealizationOrder : filter))
 
                          select new InventoriesReportViewModel
                          {
@@ -133,9 +134,9 @@ namespace Com.Bateeq.Service.Warehouse.Lib.Facades
         }
 
         //public Tuple<List<InventoryReportViewModel>, int> GetReport(string no, string unitId, string categoryId, string budgetId, string prStatus, string poStatus, DateTime? dateFrom, DateTime? dateTo, int page, int size, string Order, int offset, string username)
-        public Tuple<List<InventoriesReportViewModel>, int> GetReport(string storageId, string itemName, int page, int size, string Order, int offset, string username)
+        public Tuple<List<InventoriesReportViewModel>, int> GetReport(string storageId, string filter, int page, int size, string Order, int offset, string username)
         {
-            var Query = GetReportQuery(storageId, itemName);
+            var Query = GetReportQuery(storageId, filter);
 
             Dictionary<string, string> OrderDictionary = JsonConvert.DeserializeObject<Dictionary<string, string>>(Order);
             if (OrderDictionary.Count.Equals(0))
@@ -158,9 +159,9 @@ namespace Com.Bateeq.Service.Warehouse.Lib.Facades
         }
 
 
-        public MemoryStream GenerateExcelReportByUser(string storecode, string itemName)
+        public MemoryStream GenerateExcelReportByUser(string storecode, string filter)
         {
-            var Query = GetReportQuery(storecode, itemName);
+            var Query = GetReportQuery(storecode, filter);
             // Query = Query.OrderByDescending(a => a.ReceiptDate);
             DataTable result = new DataTable();
             //No	Unit	Budget	Kategori	Tanggal PR	Nomor PR	Kode Barang	Nama Barang	Jumlah	Satuan	Tanggal Diminta Datang	Status	Tanggal Diminta Datang Eksternal
