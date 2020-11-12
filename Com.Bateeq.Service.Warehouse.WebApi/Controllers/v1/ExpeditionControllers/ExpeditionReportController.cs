@@ -38,7 +38,6 @@ namespace Com.Bateeq.Service.Warehouse.WebApi.Controllers.v1.ExpeditionControlle
 
             try
             {
-
                 var data = facade.GetReport(dateFrom, dateTo, destinationCode, page, size, Order, offset, identityService.Username);
 
                 return Ok(new
@@ -62,7 +61,6 @@ namespace Com.Bateeq.Service.Warehouse.WebApi.Controllers.v1.ExpeditionControlle
         [HttpGet("by-user/download")]
         public IActionResult GetXls(DateTime? dateFrom, DateTime? dateTo, string destinationCode)
         {
-
             try
             {
                 byte[] xlsInBytes;
