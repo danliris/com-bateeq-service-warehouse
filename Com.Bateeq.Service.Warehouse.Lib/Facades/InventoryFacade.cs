@@ -97,7 +97,6 @@ namespace Com.Bateeq.Service.Warehouse.Lib.Facades
         {
             var inventory = dbSet.Where(x => x.StorageId == source && x.ItemId == item).FirstOrDefault();
             return inventory;
-
         }
 
         #region Monitoring By User

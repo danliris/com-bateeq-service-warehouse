@@ -45,6 +45,9 @@ using Com.Bateeq.Service.Warehouse.Lib.Interfaces.TransferInterfaces;
 using Com.Bateeq.Service.Warehouse.Lib.Interfaces.SPKInterfaces;
 using Com.Bateeq.Service.Warehouse.Lib.Facades.Stores;
 using Com.Bateeq.Service.Warehouse.Lib.Interfaces.PkbjInterfaces;
+using Com.Bateeq.Service.Warehouse.Lib.Facades.AdjustmentFacade;
+using Com.Bateeq.Service.Warehouse.Lib.Interfaces.AdjustmentInterfaces;
+using Com.Bateeq.Service.Warehouse.Lib.Interfaces.SOInterfaces;
 //using Com.DanLiris.Service.Purchasing.Lib.Facades.PRMasterValidationReportFacade;
 //using Com.DanLiris.Service.Purchasing.Lib.Facades.GarmentExternalPurchaseOrderFacades.Reports;
 //using Com.DanLiris.Service.Purchasing.Lib.Facades.GarmentSupplierBalanceDebtFacades;
@@ -95,7 +98,10 @@ namespace Com.Bateeq.Service.Warehouse.WebApi
                 .AddTransient<ITransferOutDoc, TransferOutFacade>()
                 .AddTransient<TransferInStoreFacade>()
                 .AddTransient<ReturnToCenterFacade>()
-                .AddTransient<TransferStockFacade>();
+                .AddTransient<TransferStockFacade>()
+                .AddTransient<IAdjustmentDoc, AdjustmentFacade>()
+                .AddTransient<ISODoc, SOFacade>()
+                .AddTransient<SPKDocsFacade>(); ;
                 
         }
 
