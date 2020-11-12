@@ -102,7 +102,7 @@ namespace Com.Bateeq.Service.Warehouse.Test
                     options.UseSqlServer(connectionString);
                 }, ServiceLifetime.Transient)
                 .AddTransient<TransferFacade>()
-                .AddTransient<SPKDocFacade>()
+                //.AddTransient<SPKDocFacade>()
                 .AddTransient<PkpbjFacade>()
                 .AddTransient<TransferDataUtil>()
                 .AddTransient<SPKDocDataUtil>()

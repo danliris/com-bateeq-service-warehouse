@@ -1,6 +1,8 @@
 ﻿//using Com.DanLiris.Service.Purchasing.Lib.Configs.Expedition;
+using Com.Bateeq.Service.Warehouse.Lib.Models.AdjustmentDocsModel;
 using Com.Bateeq.Service.Warehouse.Lib.Models.Expeditions;
 using Com.Bateeq.Service.Warehouse.Lib.Models.InventoryModel;
+using Com.Bateeq.Service.Warehouse.Lib.Models.SOModel;
 using Com.Bateeq.Service.Warehouse.Lib.Models.SPKDocsModel;
 using Com.Bateeq.Service.Warehouse.Lib.Models.TransferModel;
 using Com.Moonlay.Data.EntityFrameworkCore;
@@ -26,6 +28,10 @@ namespace Com.Bateeq.Service.Warehouse.Lib
         public DbSet<ExpeditionItem> ExpeditionItems { get; set; }
         public DbSet<ExpeditionDetail> ExpeditionDetails { get; set; }
         public DbSet<Expedition> Expeditions { get; set; }
+        public DbSet<AdjustmentDocs> AdjustmentDocs { get; set; }
+        public DbSet<AdjustmentDocsItem> AdjustmentDocsItems { get; set; }
+        public DbSet<SODocs> StockOpnameDocs { get; set; }
+        public DbSet<SODocsItem> StockOpnameDocsItems { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

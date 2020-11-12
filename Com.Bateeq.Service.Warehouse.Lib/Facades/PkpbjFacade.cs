@@ -236,8 +236,6 @@ namespace Com.Bateeq.Service.Warehouse.Lib.Facades
             "PackingList", "Password", "Barcode", "Name", "Size", "Price", "UOM", "QTY", "RO", "HPP"
         };
 
-
-
         public sealed class PkbjMap : CsvHelper.Configuration.ClassMap<SPKDocsCsvViewModel>
         {
             public PkbjMap()
@@ -436,7 +434,6 @@ namespace Com.Bateeq.Service.Warehouse.Lib.Facades
 
         public async Task<SPKDocsViewModel> MapToViewModel(List<SPKDocsCsvViewModel> csv, double source, string sourcec, string sourcen, double destination, string destinationc, string destinationn, DateTimeOffset date)
         {
-
             List<SPKDocsItemViewModel> sPKDocsItems = new List<SPKDocsItemViewModel>();
             //var itemx = GetItem();
 

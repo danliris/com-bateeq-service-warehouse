@@ -120,7 +120,7 @@ namespace Com.Bateeq.Service.Warehouse.Test.Controllers.ExpeditionTests
         {
             Mock<IServiceProvider> serviceProvider = new Mock<IServiceProvider>();
             List<ValidationResult> validationResults = new List<ValidationResult>();
-            System.ComponentModel.DataAnnotations.ValidationContext validationContext = new System.ComponentModel.DataAnnotations.ValidationContext(ViewModel, serviceProvider.Object, null);
+            System.ComponentModel.DataAnnotations.ValidationContext validationContext = new System.ComponentModel.DataAnnotations.ValidationContext(expviewModel, serviceProvider.Object, null);
             return new ServiceValidationExeption(validationContext, validationResults);
         }
 

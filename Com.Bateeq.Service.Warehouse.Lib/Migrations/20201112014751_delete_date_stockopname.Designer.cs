@@ -11,9 +11,10 @@ using System;
 namespace Com.Bateeq.Service.Warehouse.Lib.Migrations
 {
     [DbContext(typeof(WarehouseDbContext))]
-    partial class WarehouseDbContextModelSnapshot : ModelSnapshot
+    [Migration("20201112014751_delete_date_stockopname")]
+    partial class delete_date_stockopname
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

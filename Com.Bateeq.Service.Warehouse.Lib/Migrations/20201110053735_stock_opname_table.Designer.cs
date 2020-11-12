@@ -11,9 +11,10 @@ using System;
 namespace Com.Bateeq.Service.Warehouse.Lib.Migrations
 {
     [DbContext(typeof(WarehouseDbContext))]
-    partial class WarehouseDbContextModelSnapshot : ModelSnapshot
+    [Migration("20201110053735_stock_opname_table")]
+    partial class stock_opname_table
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -39,6 +40,8 @@ namespace Com.Bateeq.Service.Warehouse.Lib.Migrations
                         .HasMaxLength(255);
 
                     b.Property<DateTime>("CreatedUtc");
+
+                    b.Property<DateTimeOffset>("Date");
 
                     b.Property<string>("DeletedAgent")
                         .IsRequired()
@@ -629,6 +632,8 @@ namespace Com.Bateeq.Service.Warehouse.Lib.Migrations
 
                     b.Property<DateTime>("CreatedUtc");
 
+                    b.Property<DateTimeOffset>("Date");
+
                     b.Property<string>("DeletedAgent")
                         .IsRequired()
                         .HasMaxLength(255);
@@ -641,7 +646,7 @@ namespace Com.Bateeq.Service.Warehouse.Lib.Migrations
 
                     b.Property<bool>("IsDeleted");
 
-                    b.Property<bool>("IsProcessed");
+                    b.Property<bool>("IsProcess");
 
                     b.Property<string>("LastModifiedAgent")
                         .IsRequired()
