@@ -64,9 +64,8 @@ namespace Com.Bateeq.Service.Warehouse.WebApi.Controllers.v1.SOControllers
                         s._id,
                         s.code,
                         s.storage,
-                        s.date,
                         s.CreatedBy,
-                        s.isProcess
+                        s.isProcessed
                     }).ToList()
                 );
 

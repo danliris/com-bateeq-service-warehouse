@@ -28,7 +28,6 @@ namespace Com.Bateeq.Service.Warehouse.Lib.AutoMapperProfiles
 
             CreateMap<AdjustmentDocs, AdjustmentDocsViewModel>()
                 .ForMember(d => d._id, opt => opt.MapFrom(s => s.Id))
-                .ForMember(d => d.date, opt => opt.MapFrom(s => s.Date))
                 .ForMember(d => d.code, opt => opt.MapFrom(s => s.Code))
                 .ForPath(d => d.storage.code, opt => opt.MapFrom(s => s.StorageCode))
                 .ForPath(d => d.storage.name, opt => opt.MapFrom(s => s.StorageName))

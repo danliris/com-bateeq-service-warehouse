@@ -12,11 +12,10 @@ namespace Com.Bateeq.Service.Warehouse.Lib.ViewModels.SOViewModel
     {
         public string UId { get; set; }
         public string code { get; set; }
-        public DateTimeOffset? date { get; set; }
        
         public StorageViewModel storage { get; set; }
 
-        public bool isProcess { get; set; }
+        public bool isProcessed { get; set; }
 
         public List<SODocsItemViewModel> items { get; set; }
     }

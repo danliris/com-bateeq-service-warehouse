@@ -18,7 +18,7 @@ namespace Com.Bateeq.Service.Warehouse.WebApi.Controllers.v1.Adjustment
 {
     [Produces("application/json")]
     [ApiVersion("1.0")]
-    [Route("v{version:apiVersion}/adjustment")]
+    [Route("v{version:apiVersion}/adjustment/by-user")]
     [Authorize]
     public class AdjustmentController : Controller
     {
@@ -39,9 +39,18 @@ namespace Com.Bateeq.Service.Warehouse.WebApi.Controllers.v1.Adjustment
         [HttpGet]
         public IActionResult Get(int page = 1, int size = 25, string order = "{}", string keyword = null, string filter = "{}")
         {
+            identityService.Username = User.Claims.Single(p => p.Type.Equals("username")).Value;
             try
             {
-                identityService.Username = User.Claims.Single(p => p.Type.Equals("username")).Value;
+                string filterUser = string.Concat("'CreatedBy':'", identityService.Username, "'");
+                if (filter == null || !(filter.Trim().StartsWith("{") && filter.Trim().EndsWith("}")) || filter.Replace(" ", "").Equals("{}"))
+                {
+                    filter = string.Concat("{", filterUser, "}");
+                }
+                else
+                {
+                    filter = filter.Replace("}", string.Concat(", ", filterUser, "}"));
+                }
 
                 var Data = facade.Read(page, size, order, keyword, filter);
 

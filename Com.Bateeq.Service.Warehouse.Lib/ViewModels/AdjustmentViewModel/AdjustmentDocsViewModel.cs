@@ -12,7 +12,6 @@ namespace Com.Bateeq.Service.Warehouse.Lib.ViewModels.AdjustmentDocsViewModel
     {
         public string UId { get; set; }
         public string code { get; set; }
-        public DateTimeOffset? date { get; set; }
        
         public StorageViewModel storage { get; set; }
 
@@ -58,10 +57,22 @@ namespace Com.Bateeq.Service.Warehouse.Lib.ViewModels.AdjustmentDocsViewModel
                         if (item.qtyBeforeAdjustment - item.qtyAdjustment < 0)
                         {
                             itemErrorCount++;
-                            itemError += "quantity: 'Quantity after adjustment cant be below 0'";
+                            itemError += "quantity: 'Quantity after adjustment cant be below 0', ";
                         }
                     }
-                    
+
+                    if (item.qtyAdjustment == 0)
+                    {
+                        itemErrorCount++;
+                        itemError += "Item: 'Adjustment quantity must be greater than 0', ";
+                    }
+
+                    if (string.IsNullOrWhiteSpace(item.remark))
+                    {
+                        itemErrorCount++;
+                        itemError += "Item: 'Remark cant be null ', ";
+                    }
+
                     itemError += "}, ";
                 }
 

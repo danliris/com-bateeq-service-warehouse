@@ -12,8 +12,6 @@ namespace Com.Bateeq.Service.Warehouse.Lib.Models.AdjustmentDocsModel
         [MaxLength(255)]
         public string Code { get; set; }
 
-        public DateTimeOffset Date { get; set; }
-
         [MaxLength(255)]
         public string StorageCode { get; set; }
 

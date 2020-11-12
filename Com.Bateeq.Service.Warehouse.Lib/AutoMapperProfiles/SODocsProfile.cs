@@ -28,12 +28,11 @@ namespace Com.Bateeq.Service.Warehouse.Lib.AutoMapperProfiles
 
             CreateMap<SODocs, SODocsViewModel>()
                 .ForMember(d => d._id, opt => opt.MapFrom(s => s.Id))
-                .ForMember(d => d.date, opt => opt.MapFrom(s => s.Date))
                 .ForMember(d => d.code, opt => opt.MapFrom(s => s.Code))
                 .ForPath(d => d.storage.code, opt => opt.MapFrom(s => s.StorageCode))
                 .ForPath(d => d.storage.name, opt => opt.MapFrom(s => s.StorageName))
                 .ForPath(d => d.storage._id, opt => opt.MapFrom(s => s.StorageId))
-                .ForMember(d => d.isProcess, opt => opt.MapFrom(s => s.IsProcess))
+                .ForMember(d => d.isProcessed, opt => opt.MapFrom(s => s.IsProcessed))
                 .ForMember(d => d.items, opt => opt.MapFrom(s => s.Items))
                 .ReverseMap();
         }
