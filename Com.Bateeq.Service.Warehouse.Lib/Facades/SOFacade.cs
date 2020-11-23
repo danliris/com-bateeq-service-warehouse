@@ -239,9 +239,6 @@ namespace Com.Bateeq.Service.Warehouse.Lib.Facades
                                     Size = i.ItemSize,
                                     Uom = i.ItemUom
                                 });
-                                inventoriesAvailable.Quantity += (i.QtySO - i.QtyBeforeSO);
-                                EntityExtension.FlagForUpdate(inventoriesAvailable, username, USER_AGENT);
-                                EntityExtension.FlagForCreate(i, username, USER_AGENT);
 
                                 inventoryMovements.Add(new InventoryMovement
                                 {
@@ -271,6 +268,10 @@ namespace Com.Bateeq.Service.Warehouse.Lib.Facades
                                     Remark = i.Remark,
                                     StorageIsCentral = viewModel.StorageName.Contains("GUDANG") ? true : false,
                                 });
+
+                                inventoriesAvailable.Quantity += (i.QtySO - i.QtyBeforeSO);
+                                EntityExtension.FlagForUpdate(inventoriesAvailable, username, USER_AGENT);
+                                EntityExtension.FlagForCreate(i, username, USER_AGENT);
                             }
 
                             else
@@ -289,11 +290,7 @@ namespace Com.Bateeq.Service.Warehouse.Lib.Facades
                                     Remark = i.Remark,
                                     Size = i.ItemSize,
                                     Uom = i.ItemUom
-                                });
-
-                                inventoriesAvailable.Quantity -= (i.QtyBeforeSO-i.QtySO);
-                                EntityExtension.FlagForUpdate(inventoriesAvailable, username, USER_AGENT);
-                                EntityExtension.FlagForCreate(i, username, USER_AGENT);
+                                });                                
 
                                 inventoryMovements.Add(new InventoryMovement
                                 {
@@ -323,6 +320,10 @@ namespace Com.Bateeq.Service.Warehouse.Lib.Facades
                                     Remark = i.Remark,
                                     StorageIsCentral = viewModel.StorageName.Contains("GUDANG") ? true : false,
                                 });
+
+                                inventoriesAvailable.Quantity -= (i.QtyBeforeSO - i.QtySO);
+                                EntityExtension.FlagForUpdate(inventoriesAvailable, username, USER_AGENT);
+                                EntityExtension.FlagForCreate(i, username, USER_AGENT);
                             }
                         }
                     }
