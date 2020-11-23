@@ -189,6 +189,7 @@ namespace Com.Bateeq.Service.Warehouse.Lib.Facades
 
                     }
                     model.Code = code;
+                    model.Date = model.CreatedUtc;
                     model.PackingList = packingList;
                     model.Password = password;
                     model.IsReceived = false;

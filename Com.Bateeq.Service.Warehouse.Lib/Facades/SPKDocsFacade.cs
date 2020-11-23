@@ -32,8 +32,8 @@ namespace Com.Bateeq.Service.Warehouse.Lib.Facades
             this.dbSet = dbContext.Set<Inventory>();
         }
 
-       // #region Monitoring By User
-        public IQueryable<SPKDocsReportViewModel> GetReportQuery(DateTime? dateFrom, DateTime? dateTo, string destinationCode, bool status, int offset, string username)
+        #region Monitoring By User
+        public IQueryable<SPKDocsReportViewModel> GetReportQuery(DateTime? dateFrom, DateTime? dateTo, string destinationCode, bool status, int transaction, string packingList, int offset, string username)
         {
             DateTime DateFrom = dateFrom == null ? new DateTime(1970, 1, 1) : (DateTime)dateFrom;
             DateTime DateTo = dateTo == null ? DateTime.Now : (DateTime)dateTo;
@@ -49,6 +49,9 @@ namespace Com.Bateeq.Service.Warehouse.Lib.Facades
                              && a.Date.AddHours(offset).Date >= DateFrom.Date
                              && a.Date.AddHours(offset).Date <= DateTo.Date
                              && a.IsDistributed == status
+                             && (transaction == 0 ? a.SourceCode == "GDG.01" : a.SourceCode != "GDG.01" && !a.Reference.Contains("RTP"))
+                             && a.PackingList.Contains(string.IsNullOrWhiteSpace(packingList) ? a.PackingList : packingList)
+
                          select new SPKDocsReportViewModel
                          {
                              no = a.Code,
@@ -74,9 +77,9 @@ namespace Com.Bateeq.Service.Warehouse.Lib.Facades
             return Query.AsQueryable();
         }
 
-        public Tuple<List<SPKDocsReportViewModel>, int> GetReport(DateTime? dateFrom, DateTime? dateTo, string destinationCode, bool status, int page, int size, string Order, int offset, string username)
+        public Tuple<List<SPKDocsReportViewModel>, int> GetReport(DateTime? dateFrom, DateTime? dateTo, string destinationCode, bool status, int transaction, string packingList, int page, int size, string Order, int offset, string username)
         {
-            var Query = GetReportQuery(dateFrom, dateTo, destinationCode, status, offset, username);
+            var Query = GetReportQuery(dateFrom, dateTo, destinationCode, status, transaction, packingList, offset, username);
 
             Dictionary<string, string> OrderDictionary = JsonConvert.DeserializeObject<Dictionary<string, string>>(Order);
             if (OrderDictionary.Count.Equals(0))
@@ -98,9 +101,9 @@ namespace Com.Bateeq.Service.Warehouse.Lib.Facades
             return Tuple.Create(Data, TotalData);
         }
 
-        public MemoryStream GenerateExcel(DateTime? dateFrom, DateTime? dateTo, string destinationCode, bool status, int offset, string username)
+        public MemoryStream GenerateExcel(DateTime? dateFrom, DateTime? dateTo, string destinationCode, bool status, int transaction, string packingList, int offset, string username)
         {
-            var Query = GetReportQuery(dateFrom, dateTo, destinationCode, status, offset, username);
+            var Query = GetReportQuery(dateFrom, dateTo, destinationCode, status, transaction, packingList, offset, username);
             Query = Query.OrderByDescending(b => b.LastModifiedUtc);
             DataTable result = new DataTable();
             //No	Unit	Budget	Kategori	Tanggal PR	Nomor PR	Kode Barang	Nama Barang	Jumlah	Satuan	Tanggal Diminta Datang	Status	Tanggal Diminta Datang Eksternal
@@ -127,7 +130,7 @@ namespace Com.Bateeq.Service.Warehouse.Lib.Facades
             //result.Columns.Add(new DataColumn() { ColumnName = "Status PR", DataType = typeof(String) });
             //result.Columns.Add(new DataColumn() { ColumnName = "Status Barang", DataType = typeof(String) });
             if (Query.ToArray().Count() == 0)
-                result.Rows.Add( "", "", "", "", "", "", "", "", "", 0, "", ""); // to allow column name to be generated properly for empty data as template
+                result.Rows.Add("", "", "", "", "", "", "", "", "", 0, "", ""); // to allow column name to be generated properly for empty data as template
             else
             {
                 int index = 0;
@@ -137,12 +140,13 @@ namespace Com.Bateeq.Service.Warehouse.Lib.Facades
                     string date = item.date == null ? "-" : item.date.ToOffset(new TimeSpan(offset, 0, 0)).ToString("dd MMM yyyy", new CultureInfo("id-ID"));
                     //string prDate = item.expectedDeliveryDatePR == new DateTime(1970, 1, 1) ? "-" : item.expectedDeliveryDatePR.ToOffset(new TimeSpan(offset, 0, 0)).ToString("dd MMM yyyy", new CultureInfo("id-ID"));
                     //string epoDate = item.expectedDeliveryDatePO == new DateTime(1970, 1, 1) ? "-" : item.expectedDeliveryDatePO.ToOffset(new TimeSpan(offset, 0, 0)).ToString("dd MMM yyyy", new CultureInfo("id-ID"));
-                    result.Rows.Add(item.date, item.sourceName, item.destinationName,  item.packingList, item.itemCode, item.itemName, item.itemSize, item.itemArticleRealizationOrder, item.itemUom, item.Quantity ,item.isReceived, item.isDistributed);
+                    result.Rows.Add(item.date, item.sourceName, item.destinationName, item.packingList, item.itemCode, item.itemName, item.itemSize, item.itemArticleRealizationOrder, item.itemUom, item.Quantity, item.isReceived, item.isDistributed);
                 }
             }
 
             return Excel.CreateExcel(new List<KeyValuePair<DataTable, string>>() { new KeyValuePair<DataTable, string>(result, "Territory") }, true);
         }
+        #endregion
 
     }
 }

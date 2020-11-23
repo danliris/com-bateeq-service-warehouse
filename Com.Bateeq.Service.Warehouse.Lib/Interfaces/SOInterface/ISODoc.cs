@@ -17,6 +17,7 @@ namespace Com.Bateeq.Service.Warehouse.Lib.Interfaces.SOInterfaces
         Task UploadData(SODocs data, string username);
         Task<int> Process(SODocs model, string username, int clientTimeZoneOffset = 7);
         Task<SODocsViewModel> MapToViewModel(List<SODocsCsvViewModel> data, string source);
+        Task<int> Delete(int id, string username);
         //Task<int> Process(SODocs model, string username, int clientTimeZoneOffset = 7);
     }
 }

@@ -6,6 +6,7 @@ using Com.Bateeq.Service.Warehouse.Lib.Models.SPKDocsModel;
 using Com.Bateeq.Service.Warehouse.Lib.Models.TransferModel;
 using Com.Bateeq.Service.Warehouse.Lib.ViewModels.NewIntegrationViewModel;
 using Com.Bateeq.Service.Warehouse.Lib.ViewModels.TransferViewModels;
+using Com.DanLiris.Service.Warehouse.Lib.ViewModels.TransferViewModel;
 using Com.Moonlay.Models;
 using Com.Moonlay.NetCore.Lib;
 using HashidsNet;
@@ -15,6 +16,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Dynamic.Core;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -54,6 +56,73 @@ namespace Com.Bateeq.Service.Warehouse.Lib.Facades.Stores
             string code = String.Format("{0}/{1}/{2}", hashids.Encode(diff), ModuleId, DateTime.Now.ToString("MM/yyyy"));
             return code;
         }
+
+        public IQueryable<TransferStockReportViewModel> GetReportQuery(DateTime? dateFrom, DateTime? dateTo, string status, string code, int offset)
+        {
+            DateTime DateFrom = dateFrom == null ? new DateTime(1970, 1, 1) : (DateTime)dateFrom;
+            DateTime DateTo = dateTo == null ? DateTime.Now : (DateTime)dateTo;
+
+            var Query = (from a in dbContext.TransferOutDocs
+                         join b in dbContext.SPKDocs on a.Code equals b.Reference
+                         join c in dbContext.TransferOutDocItems on a.Id equals c.TransferOutDocsId
+                         where a.IsDeleted == false
+                             && b.IsDeleted == false
+                             && c.IsDeleted == false
+                             && a.Date.AddHours(offset).Date >= DateFrom.Date
+                             && a.Date.AddHours(offset).Date <= DateTo.Date
+                             && a.Code.Contains(string.IsNullOrWhiteSpace(code) ? a.Code : code)
+                             && b.Reference.Contains("EFR-KB/RTT")
+                             && b.DestinationName != "GUDANG TRANSFER STOCK"
+                             && b.IsReceived == (status.Equals("Semua") ? b.IsReceived : (status.Equals("Belum Diterima") ? false : true)) 
+
+                         select new TransferStockReportViewModel
+                         {
+                             code = a.Code,
+                             date = a.Date,
+                             sourceId = a.SourceId,
+                             sourceCode = a.SourceCode,
+                             sourceName = a.SourceName,
+                             destinationId = a.DestinationId,
+                             destinationCode = a.DestinationCode,
+                             destinationName = a.DestinationName,
+                             isReceived = b.IsReceived,
+                             packingList = b.PackingList,
+                             itemCode = c.ItemCode,
+                             itemName = c.ItemName,
+                             itemSize = c.Size,
+                             itemUom = c.Uom,
+                             itemArticleRealizationOrder = c.ArticleRealizationOrder,
+                             Quantity = c.Quantity,
+                             itemDomesticSale = c.DomesticSale,
+                             LastModifiedUtc = a.LastModifiedUtc
+                         });
+            return Query.AsQueryable();
+        }
+
+        public Tuple<List<TransferStockReportViewModel>, int> GetReport(DateTime? dateFrom, DateTime? dateTo, string status, string code, int page, int size, string Order, int offset)
+        {
+            var Query = GetReportQuery(dateFrom, dateTo, status, code, offset);
+
+            Dictionary<string, string> OrderDictionary = JsonConvert.DeserializeObject<Dictionary<string, string>>(Order);
+            if (OrderDictionary.Count.Equals(0))
+            {
+                Query = Query.OrderByDescending(b => b.LastModifiedUtc);
+            }
+            else
+            {
+                string Key = OrderDictionary.Keys.First();
+                string OrderType = OrderDictionary[Key];
+
+                Query = Query.OrderBy(string.Concat(Key, " ", OrderType));
+            }
+
+            Pageable<TransferStockReportViewModel> pageable = new Pageable<TransferStockReportViewModel>(Query, page - 1, size);
+            List<TransferStockReportViewModel> Data = pageable.Data.ToList<TransferStockReportViewModel>();
+            int TotalData = pageable.TotalCount;
+
+            return Tuple.Create(Data, TotalData);
+        }
+
         public async Task<int> Create(TransferOutDocViewModel model, TransferOutDoc model2, string username, int clientTimeZoneOffset = 7)
         {
             int Created = 0;

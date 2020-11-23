@@ -222,7 +222,7 @@ namespace Com.Bateeq.Service.Warehouse.Lib.Facades
                             items.IsAdjusted = true;
                             EntityExtension.FlagForUpdate(items, username, USER_AGENT);
 
-                            if (sourceQty < i.QtySO)
+                            if (i.QtyBeforeSO < i.QtySO)
                             {
                                 transferInDocsItems.Add(new TransferInDocItem
                                 {
@@ -234,19 +234,19 @@ namespace Com.Bateeq.Service.Warehouse.Lib.Facades
                                     ItemCode = i.ItemCode,
                                     ItemId = i.ItemId,
                                     ItemName = i.ItemName,
-                                    Quantity = i.QtySO - sourceQty,
+                                    Quantity = i.QtySO - i.QtyBeforeSO,
                                     Remark = i.Remark,
                                     Size = i.ItemSize,
                                     Uom = i.ItemUom
                                 });
-                                inventoriesAvailable.Quantity = i.QtySO;
+                                inventoriesAvailable.Quantity += (i.QtySO - i.QtyBeforeSO);
                                 EntityExtension.FlagForUpdate(inventoriesAvailable, username, USER_AGENT);
                                 EntityExtension.FlagForCreate(i, username, USER_AGENT);
 
                                 inventoryMovements.Add(new InventoryMovement
                                 {
                                     Before = sourceQty,
-                                    After = i.QtySO,
+                                    After = sourceQty + (i.QtySO - i.QtyBeforeSO),
                                     Date = DateTimeOffset.Now,
                                     ItemArticleRealizationOrder = i.ItemArticleRealizationOrder,
                                     ItemCode = i.ItemCode,
@@ -262,7 +262,7 @@ namespace Com.Bateeq.Service.Warehouse.Lib.Facades
                                     ItemName = i.ItemName,
                                     ItemSize = i.ItemSize,
                                     ItemUom = i.ItemUom,
-                                    Quantity = i.QtySO - sourceQty,
+                                    Quantity = i.QtySO - i.QtyBeforeSO,
                                     StorageCode = viewModel.StorageCode,
                                     StorageId = viewModel.StorageId,
                                     StorageName = viewModel.StorageName,
@@ -285,20 +285,20 @@ namespace Com.Bateeq.Service.Warehouse.Lib.Facades
                                     ItemCode = i.ItemCode,
                                     ItemId = i.ItemId,
                                     ItemName = i.ItemName,
-                                    Quantity = sourceQty - i.QtySO,
+                                    Quantity = i.QtyBeforeSO-i.QtySO,
                                     Remark = i.Remark,
                                     Size = i.ItemSize,
                                     Uom = i.ItemUom
                                 });
 
-                                inventoriesAvailable.Quantity = i.QtySO;
+                                inventoriesAvailable.Quantity -= (i.QtyBeforeSO-i.QtySO);
                                 EntityExtension.FlagForUpdate(inventoriesAvailable, username, USER_AGENT);
                                 EntityExtension.FlagForCreate(i, username, USER_AGENT);
 
                                 inventoryMovements.Add(new InventoryMovement
                                 {
                                     Before = sourceQty,
-                                    After = i.QtySO,
+                                    After = sourceQty - (i.QtyBeforeSO - i.QtySO),
                                     Date = DateTimeOffset.Now,
                                     ItemArticleRealizationOrder = i.ItemArticleRealizationOrder,
                                     ItemCode = i.ItemCode,
@@ -314,7 +314,7 @@ namespace Com.Bateeq.Service.Warehouse.Lib.Facades
                                     ItemName = i.ItemName,
                                     ItemSize = i.ItemSize,
                                     ItemUom = i.ItemUom,
-                                    Quantity = sourceQty - i.QtySO,
+                                    Quantity = i.QtyBeforeSO - i.QtySO,
                                     StorageCode = viewModel.StorageCode,
                                     StorageId = viewModel.StorageId,
                                     StorageName = viewModel.StorageName,
@@ -397,6 +397,21 @@ namespace Com.Bateeq.Service.Warehouse.Lib.Facades
 
                 return Process;
             }
+        }
+
+        public async Task<int> Delete(int id, string username)
+        {
+            SODocs model = ReadById(id);
+            EntityExtension.FlagForDelete(model, username, USER_AGENT, true);
+
+            foreach (var i in model.Items)
+            {
+                EntityExtension.FlagForDelete(model, username, USER_AGENT, true);
+            }
+
+            dbSetSO.Update(model);
+
+            return await dbContext.SaveChangesAsync();
         }
 
         private StorageViewModel2 GetStorage(string code)
