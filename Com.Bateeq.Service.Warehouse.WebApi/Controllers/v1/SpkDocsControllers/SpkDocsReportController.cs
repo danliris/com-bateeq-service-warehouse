@@ -30,7 +30,7 @@ namespace Com.Bateeq.Service.Warehouse.WebApi.Controllers.v1.SpkDocsControllers
         }
         #region By User
         [HttpGet("by-user")]
-        public IActionResult GetReport(DateTime? dateFrom, DateTime? dateTo, string destinationCode, bool status, int page= 1, int size=25, string Order = "{}")
+        public IActionResult GetReport(DateTime? dateFrom, DateTime? dateTo, string destinationCode, bool status, int transaction, string packingList, int page = 1, int size = 25, string Order = "{}")
         {
             int offset = Convert.ToInt32(Request.Headers["x-timezone-offset"]);
             identityService.Username = User.Claims.Single(p => p.Type.Equals("username")).Value;
@@ -39,7 +39,7 @@ namespace Com.Bateeq.Service.Warehouse.WebApi.Controllers.v1.SpkDocsControllers
             try
             {
 
-                var data = facade.GetReport(dateFrom, dateTo, destinationCode, status, page, size, Order, offset, identityService.Username);
+                var data = facade.GetReport(dateFrom, dateTo, destinationCode, status, transaction, packingList, page, size, Order, offset, identityService.Username);
 
                 return Ok(new
                 {
@@ -60,7 +60,7 @@ namespace Com.Bateeq.Service.Warehouse.WebApi.Controllers.v1.SpkDocsControllers
         }
 
         [HttpGet("by-user/download")]
-        public IActionResult GetXls(DateTime? dateFrom, DateTime? dateTo, string destinationCode, bool status)
+        public IActionResult GetXls(DateTime? dateFrom, DateTime? dateTo, string destinationCode, bool status, int transaction, string packingList)
         {
 
             try
@@ -71,7 +71,7 @@ namespace Com.Bateeq.Service.Warehouse.WebApi.Controllers.v1.SpkDocsControllers
                 DateTime DateFrom = dateFrom == null ? new DateTime(1970, 1, 1) : Convert.ToDateTime(dateFrom);
                 DateTime DateTo = dateTo == null ? DateTime.Now : Convert.ToDateTime(dateTo);
 
-                var xls = facade.GenerateExcel(dateFrom, dateTo, destinationCode, status, offset, identityService.Username);
+                var xls = facade.GenerateExcel(dateFrom, dateTo, destinationCode, status, transaction, packingList, offset, identityService.Username);
 
                 string filename = String.Format("Packing List - {0}.xlsx", DateTime.UtcNow.ToString("ddMMyyyy"));
 

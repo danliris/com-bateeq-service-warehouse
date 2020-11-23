@@ -73,7 +73,7 @@ namespace Com.Bateeq.Service.Warehouse.Lib.Facades
             return Tuple.Create(Data, TotalData, OrderDictionary);
         }
 
-        public IQueryable<ExpeditionReportViewModel> GetReportQuery(DateTime? dateFrom, DateTime? dateTo, string destinationCode, int offset, string username)
+        public IQueryable<ExpeditionReportViewModel> GetReportQuery(DateTime? dateFrom, DateTime? dateTo, string destinationCode, bool status, int transaction, string packingList, int offset, string username)
         {
             DateTime DateFrom = dateFrom == null ? new DateTime(1970, 1, 1) : (DateTime)dateFrom;
             DateTime DateTo = dateTo == null ? DateTime.Now : (DateTime)dateTo;
@@ -85,10 +85,15 @@ namespace Com.Bateeq.Service.Warehouse.Lib.Facades
                              && b.IsDeleted == false
                              && c.IsDeleted == false
                              && b.DestinationCode == (string.IsNullOrWhiteSpace(destinationCode) ? b.DestinationCode : destinationCode)
+                             && !b.Reference.Contains("RTT")
                              && a.CreatedBy == (string.IsNullOrWhiteSpace(username) ? a.CreatedBy : username)
                              // && a.Code == (string.IsNullOrWhiteSpace(code) ? a.Code : code)
                              && a.Date.AddHours(offset).Date >= DateFrom.Date
                              && a.Date.AddHours(offset).Date <= DateTo.Date
+                             && b.IsReceived == status
+                             && (transaction == 0 ? b.SourceName.Contains("GUDANG") : !b.SourceName.Contains("GUDANG") && !b.Reference.Contains("RTP"))
+                             && b.PackingList.Contains(string.IsNullOrWhiteSpace(packingList) ? b.PackingList : packingList)
+
                          select new ExpeditionReportViewModel
                          {
                              code = a.Code,
@@ -115,9 +120,9 @@ namespace Com.Bateeq.Service.Warehouse.Lib.Facades
             return Query.AsQueryable();
         }
 
-        public Tuple<List<ExpeditionReportViewModel>, int> GetReport(DateTime? dateFrom, DateTime? dateTo, string destinationCode, int page, int size, string Order, int offset, string username)
+        public Tuple<List<ExpeditionReportViewModel>, int> GetReport(DateTime? dateFrom, DateTime? dateTo, string destinationCode, bool status, int transaction, string packingList, int page, int size, string Order, int offset, string username)
         {
-            var Query = GetReportQuery(dateFrom, dateTo, destinationCode, offset, username);
+            var Query = GetReportQuery(dateFrom, dateTo, destinationCode, status, transaction, packingList, offset, username);
 
             Dictionary<string, string> OrderDictionary = JsonConvert.DeserializeObject<Dictionary<string, string>>(Order);
             if (OrderDictionary.Count.Equals(0))
@@ -139,9 +144,9 @@ namespace Com.Bateeq.Service.Warehouse.Lib.Facades
             return Tuple.Create(Data, TotalData);
         }
 
-        public MemoryStream GenerateExcel(DateTime? dateFrom, DateTime? dateTo, string destinationCode, int offset, string username)
+        public MemoryStream GenerateExcel(DateTime? dateFrom, DateTime? dateTo, string destinationCode, bool status, int transaction, string packingList, int offset, string username)
         {
-            var Query = GetReportQuery(dateFrom, dateTo, destinationCode, offset, username);
+            var Query = GetReportQuery(dateFrom, dateTo, destinationCode, status, transaction, packingList, offset, username);
             Query = Query.OrderByDescending(b => b.LastModifiedUtc);
             DataTable result = new DataTable();
             //No	Unit	Budget	Kategori	Tanggal PR	Nomor PR	Kode Barang	Nama Barang	Jumlah	Satuan	Tanggal Diminta Datang	Status	Tanggal Diminta Datang Eksternal

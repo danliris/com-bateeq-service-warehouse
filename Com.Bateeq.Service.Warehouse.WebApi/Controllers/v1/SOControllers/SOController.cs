@@ -175,6 +175,30 @@ namespace Com.Bateeq.Service.Warehouse.WebApi.Controllers.v1.SOControllers
             }
         }
 
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            try
+            {
+                identityService.Username = User.Claims.Single(p => p.Type.Equals("username")).Value;
+
+                IValidateService validateService = (IValidateService)serviceProvider.GetService(typeof(IValidateService));
+
+                await facade.Delete(id, identityService.Username);
+
+                return NoContent();
+            }
+
+            catch (Exception e)
+            {
+                Dictionary<string, object> Result =
+                    new ResultFormatter(ApiVersion, General.INTERNAL_ERROR_STATUS_CODE, e.Message)
+                    .Fail();
+                return StatusCode(General.INTERNAL_ERROR_STATUS_CODE, Result);
+            }
+
+        }
+
         //[HttpGet("pdf/{id}")]
         //public IActionResult GetPackingListPDF(int id)
         //{
