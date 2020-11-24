@@ -113,8 +113,8 @@ namespace Com.Bateeq.Service.Warehouse.Lib.Facades
                          where a.IsDeleted == false
                          //&& a.StorageId == Convert.ToInt64((string.IsNullOrWhiteSpace(storageId) ? a.StorageId.ToString() :  storageId))
                          && a.StorageCode == (string.IsNullOrWhiteSpace(storageId) ? a.StorageCode : storageId)
-                         && a.ItemName.Contains((string.IsNullOrWhiteSpace(filter) ? a.ItemName : filter))
-                         || a.ItemArticleRealizationOrder.Contains((string.IsNullOrWhiteSpace(filter) ? a.ItemArticleRealizationOrder : filter))
+                         //&& a.ItemName.Contains((string.IsNullOrWhiteSpace(filter) ? a.ItemName : filter))
+                         //|| a.ItemArticleRealizationOrder.Contains((string.IsNullOrWhiteSpace(filter) ? a.ItemArticleRealizationOrder : filter))
 
                          select new InventoriesReportViewModel
                          {
@@ -129,6 +129,9 @@ namespace Com.Bateeq.Service.Warehouse.Lib.Facades
                              StorageCode = a.StorageCode,
                              StorageName = a.StorageName
                          });
+
+
+
             return Query;
         }
 
@@ -151,10 +154,27 @@ namespace Com.Bateeq.Service.Warehouse.Lib.Facades
             }
 
             // Pageable<InventoriesReportViewModel> pageable = new Pageable<InventoriesReportViewModel>(Query, page - 1, size);
+            List<InventoriesReportViewModel> Filter = new List<InventoriesReportViewModel>();
             List<InventoriesReportViewModel> Data = Query.ToList<InventoriesReportViewModel>();
+            if (!string.IsNullOrWhiteSpace(filter))
+            {
+                foreach (InventoriesReportViewModel a in Data)
+                {
+
+
+                    if (a.ItemName.Contains(filter) || a.ItemArticleRealizationOrder.Contains(filter))
+                    {
+                        Filter.Add(a);
+                    }
+                }
+            }
+            else
+            {
+                Filter = Data;
+            }
             // int TotalData = pageable.TotalCount;
 
-            return Tuple.Create(Data, Data.Count());
+            return Tuple.Create(Filter, Filter.Count());
         }
 
 
