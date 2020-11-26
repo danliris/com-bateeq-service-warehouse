@@ -130,9 +130,26 @@ namespace Com.Bateeq.Service.Warehouse.Lib.Facades
                              StorageName = a.StorageName
                          });
 
+            var Query2 = (from a in Query
+                          where a.ItemName.Contains((string.IsNullOrWhiteSpace(filter) ? a.ItemName : filter))
+                          || a.ItemArticleRealizationOrder.Contains((string.IsNullOrWhiteSpace(filter) ? a.ItemArticleRealizationOrder : filter))
 
+                          select new InventoriesReportViewModel
+                          {
+                              ItemCode = a.ItemCode,
+                              ItemName = a.ItemName,
+                              ItemArticleRealizationOrder = a.ItemArticleRealizationOrder,
+                              ItemSize = a.ItemSize,
+                              ItemUom = a.ItemUom,
+                              ItemDomesticSale = a.ItemDomesticSale,
+                              Quantity = a.Quantity,
+                              StorageId = a.StorageId,
+                              StorageCode = a.StorageCode,
+                              StorageName = a.StorageName
+                          });
 
-            return Query;
+            return Query2;
+
         }
 
         //public Tuple<List<InventoryReportViewModel>, int> GetReport(string no, string unitId, string categoryId, string budgetId, string prStatus, string poStatus, DateTime? dateFrom, DateTime? dateTo, int page, int size, string Order, int offset, string username)
@@ -154,27 +171,8 @@ namespace Com.Bateeq.Service.Warehouse.Lib.Facades
             }
 
             // Pageable<InventoriesReportViewModel> pageable = new Pageable<InventoriesReportViewModel>(Query, page - 1, size);
-            List<InventoriesReportViewModel> Filter = new List<InventoriesReportViewModel>();
             List<InventoriesReportViewModel> Data = Query.ToList<InventoriesReportViewModel>();
-            if (!string.IsNullOrWhiteSpace(filter))
-            {
-                foreach (InventoriesReportViewModel a in Data)
-                {
-
-
-                    if (a.ItemName.Contains(filter) || a.ItemArticleRealizationOrder.Contains(filter))
-                    {
-                        Filter.Add(a);
-                    }
-                }
-            }
-            else
-            {
-                Filter = Data;
-            }
-            // int TotalData = pageable.TotalCount;
-
-            return Tuple.Create(Filter, Filter.Count());
+            return Tuple.Create(Data, Data.Count());
         }
 
 
@@ -203,21 +201,17 @@ namespace Com.Bateeq.Service.Warehouse.Lib.Facades
             // to allow column name to be generated properly for empty data as template
             else
             {
-                
                 int index = 0;
+
                 foreach (var item in Query)
                 {
                     index++;
-                   // string date = item.Date == null ? "-" : item.Date.ToOffset(new TimeSpan(7, 0, 0)).ToString("dd MMM yyyy", new CultureInfo("id-ID"));
+                    // string date = item.Date == null ? "-" : item.Date.ToOffset(new TimeSpan(7, 0, 0)).ToString("dd MMM yyyy", new CultureInfo("id-ID"));
                     //string pr_date = item.PRDate == null ? "-" : item.PRDate.ToOffset(new TimeSpan(offset, 0, 0)).ToString("dd MMM yyyy", new CultureInfo("id-ID"));
                     //string do_date = item.DODate == null ? "-" : item.ReceiptDate.ToOffset(new TimeSpan(offset, 0, 0)).ToString("dd MMM yyyy", new CultureInfo("id-ID"));
 
                     result.Rows.Add(index, item.StorageCode, item.StorageName, item.ItemCode, item.ItemName, item.ItemArticleRealizationOrder, item.Quantity, item.ItemDomesticSale, item.Quantity * item.ItemDomesticSale);
-
-                    
-
                 }
-
             }
 
             return Excel.CreateExcel(new List<KeyValuePair<DataTable, string>>() { new KeyValuePair<DataTable, string>(result, "Territory") }, true);
