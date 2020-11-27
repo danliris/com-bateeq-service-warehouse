@@ -621,7 +621,7 @@ namespace Com.Bateeq.Service.Warehouse.Lib.Facades.Stores
             var Query = from a in dbContext.TransferOutDocs
                         join b in dbContext.SPKDocs on a.Code equals b.Reference
                         join c in dbContext.TransferOutDocItems on a.Id equals c.TransferOutDocsId
-                        where a.Code.Contains("EFR-KB/RTT") && b.DestinationName != "GUDANG TRANSFER STOCK BATEEQ"
+                        where a.Code.Contains("EFR-KB/RTT") && b.DestinationName != "GUDANG TRANSFER STOCK"
                         && a.Id == id
                         select new 
                         {
