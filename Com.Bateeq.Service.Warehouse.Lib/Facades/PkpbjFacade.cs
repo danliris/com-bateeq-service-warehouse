@@ -147,6 +147,8 @@ namespace Com.Bateeq.Service.Warehouse.Lib.Facades
             {
                 try
                 {
+                    EntityExtension.FlagForCreate(model, username, USER_AGENT);
+
                     string packingList = GenerateCode("EFR-KB/PLB");
                     string code = GenerateCode("EFR-PK/PBJ");
                     string password = String.Join("",GenerateCode(DateTime.Now.ToString("dd")).Split("/"));
@@ -189,13 +191,12 @@ namespace Com.Bateeq.Service.Warehouse.Lib.Facades
 
                     }
                     model.Code = code;
-                    model.Date = model.CreatedUtc;
+                    model.Date = new DateTimeOffset(model.CreatedUtc);
                     model.PackingList = packingList;
                     model.Password = password;
                     model.IsReceived = false;
                     model.IsDraft = false;
                     model.IsDistributed = false;
-                    EntityExtension.FlagForCreate(model, username, USER_AGENT);
 
                     dbSet.Add(model);
                     Created = await dbContext.SaveChangesAsync();

@@ -13,7 +13,8 @@ namespace Com.Bateeq.Service.Warehouse.Lib.AutoMapperProfiles
         {
             CreateMap<SPKDocsItem, PkbjByUserItemViewModel>()
                 .ForMember(d => d._id, opt => opt.MapFrom(s => s.Id))
-                .ForMember(d => d.quantity, opt => opt.MapFrom(s => s.SendQuantity))
+                .ForMember(d => d.quantity, opt => opt.MapFrom(s => s.Quantity))
+                .ForMember(d => d.sendquantity, opt => opt.MapFrom(s => s.SendQuantity))
                 .ForPath(d => d.item._id, opt => opt.MapFrom(s => s.ItemId))
                 .ForPath(d => d.item.code, opt => opt.MapFrom(s => s.ItemCode))
                 .ForPath(d => d.item.name, opt => opt.MapFrom(s => s.ItemName))
