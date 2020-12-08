@@ -1,10 +1,14 @@
-﻿using Com.Bateeq.Service.Warehouse.Lib.Models.InventoryModel;
+﻿using Com.Bateeq.Service.Warehouse.Lib.Helpers;
+using Com.Bateeq.Service.Warehouse.Lib.Models.InventoryModel;
 using Com.Bateeq.Service.Warehouse.Lib.ViewModels.InventoryViewModel;
 using Com.Moonlay.NetCore.Lib;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Data;
+using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Linq.Dynamic.Core;
 using System.Text;
@@ -97,19 +101,20 @@ namespace Com.Bateeq.Service.Warehouse.Lib.Facades
         {
             var inventory = dbSet.Where(x => x.StorageId == source && x.ItemId == item).FirstOrDefault();
             return inventory;
-
         }
 
         #region Monitoring By User
-        public IQueryable<InventoriesReportViewModel> GetReportQuery(string storageId, string itemName, int offset, string username)
+        public IQueryable<InventoriesReportViewModel> GetReportQuery(string storageId, string filter)
         {
             //DateTime DateFrom = dateFrom == null ? new DateTime(1970, 1, 1) : (DateTime)dateFrom;
             //DateTime DateTo = dateTo == null ? DateTime.Now : (DateTime)dateTo;
 
             var Query = (from a in dbContext.Inventories
                          where a.IsDeleted == false
-                         && a.StorageId == Convert.ToInt64((string.IsNullOrWhiteSpace(storageId) ? a.StorageId.ToString() : storageId))
-                         && a.ItemName == (string.IsNullOrWhiteSpace(itemName) ? a.ItemName : itemName)
+                         //&& a.StorageId == Convert.ToInt64((string.IsNullOrWhiteSpace(storageId) ? a.StorageId.ToString() :  storageId))
+                         && a.StorageCode == (string.IsNullOrWhiteSpace(storageId) ? a.StorageCode : storageId)
+                         //&& a.ItemName.Contains((string.IsNullOrWhiteSpace(filter) ? a.ItemName : filter))
+                         //|| a.ItemArticleRealizationOrder.Contains((string.IsNullOrWhiteSpace(filter) ? a.ItemArticleRealizationOrder : filter))
 
                          select new InventoriesReportViewModel
                          {
@@ -124,13 +129,33 @@ namespace Com.Bateeq.Service.Warehouse.Lib.Facades
                              StorageCode = a.StorageCode,
                              StorageName = a.StorageName
                          });
-            return Query;
+
+            var Query2 = (from a in Query
+                          where a.ItemName.Contains((string.IsNullOrWhiteSpace(filter) ? a.ItemName : filter))
+                          || a.ItemArticleRealizationOrder.Contains((string.IsNullOrWhiteSpace(filter) ? a.ItemArticleRealizationOrder : filter))
+
+                          select new InventoriesReportViewModel
+                          {
+                              ItemCode = a.ItemCode,
+                              ItemName = a.ItemName,
+                              ItemArticleRealizationOrder = a.ItemArticleRealizationOrder,
+                              ItemSize = a.ItemSize,
+                              ItemUom = a.ItemUom,
+                              ItemDomesticSale = a.ItemDomesticSale,
+                              Quantity = a.Quantity,
+                              StorageId = a.StorageId,
+                              StorageCode = a.StorageCode,
+                              StorageName = a.StorageName
+                          });
+
+            return Query2;
+
         }
 
         //public Tuple<List<InventoryReportViewModel>, int> GetReport(string no, string unitId, string categoryId, string budgetId, string prStatus, string poStatus, DateTime? dateFrom, DateTime? dateTo, int page, int size, string Order, int offset, string username)
-        public Tuple<List<InventoriesReportViewModel>, int> GetReport(string storageId, string itemName, int page, int size, string Order, int offset, string username)
+        public Tuple<List<InventoriesReportViewModel>, int> GetReport(string storageId, string filter, int page, int size, string Order, int offset, string username)
         {
-            var Query = GetReportQuery(storageId, itemName, offset, username);
+            var Query = GetReportQuery(storageId, filter);
 
             Dictionary<string, string> OrderDictionary = JsonConvert.DeserializeObject<Dictionary<string, string>>(Order);
             if (OrderDictionary.Count.Equals(0))
@@ -147,9 +172,49 @@ namespace Com.Bateeq.Service.Warehouse.Lib.Facades
 
             // Pageable<InventoriesReportViewModel> pageable = new Pageable<InventoriesReportViewModel>(Query, page - 1, size);
             List<InventoriesReportViewModel> Data = Query.ToList<InventoriesReportViewModel>();
-            // int TotalData = pageable.TotalCount;
-
             return Tuple.Create(Data, Data.Count());
+        }
+
+
+        public MemoryStream GenerateExcelReportByUser(string storecode, string filter)
+        {
+            var Query = GetReportQuery(storecode, filter);
+            // Query = Query.OrderByDescending(a => a.ReceiptDate);
+            DataTable result = new DataTable();
+            //No	Unit	Budget	Kategori	Tanggal PR	Nomor PR	Kode Barang	Nama Barang	Jumlah	Satuan	Tanggal Diminta Datang	Status	Tanggal Diminta Datang Eksternal
+
+            result.Columns.Add(new DataColumn() { ColumnName = "No", DataType = typeof(String) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Kode Toko", DataType = typeof(String) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Nama", DataType = typeof(String) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Barcode", DataType = typeof(String) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Nama Barang", DataType = typeof(String) });
+            result.Columns.Add(new DataColumn() { ColumnName = "RO", DataType = typeof(String) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Kuantitas", DataType = typeof(double) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Harga", DataType = typeof(double) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Subtotal", DataType = typeof(double) });
+           
+
+
+
+            if (Query.ToArray().Count() == 0)
+                result.Rows.Add("", "", "", "", "", "", "", "", "", 0, 0, 0, 0, 0, 0);
+            // to allow column name to be generated properly for empty data as template
+            else
+            {
+                int index = 0;
+
+                foreach (var item in Query)
+                {
+                    index++;
+                    // string date = item.Date == null ? "-" : item.Date.ToOffset(new TimeSpan(7, 0, 0)).ToString("dd MMM yyyy", new CultureInfo("id-ID"));
+                    //string pr_date = item.PRDate == null ? "-" : item.PRDate.ToOffset(new TimeSpan(offset, 0, 0)).ToString("dd MMM yyyy", new CultureInfo("id-ID"));
+                    //string do_date = item.DODate == null ? "-" : item.ReceiptDate.ToOffset(new TimeSpan(offset, 0, 0)).ToString("dd MMM yyyy", new CultureInfo("id-ID"));
+
+                    result.Rows.Add(index, item.StorageCode, item.StorageName, item.ItemCode, item.ItemName, item.ItemArticleRealizationOrder, item.Quantity, item.ItemDomesticSale, item.Quantity * item.ItemDomesticSale);
+                }
+            }
+
+            return Excel.CreateExcel(new List<KeyValuePair<DataTable, string>>() { new KeyValuePair<DataTable, string>(result, "Territory") }, true);
         }
         #endregion
 
@@ -213,7 +278,7 @@ namespace Com.Bateeq.Service.Warehouse.Lib.Facades
         }
 
         #region Monitoring Inventory Movements
-        public IQueryable<InventoryMovementsReportViewModel> GetMovementQuery(string storageId, string itemCode, string info, int offset, string username)
+        public IQueryable<InventoryMovementsReportViewModel> GetMovementQuery(string storageId, string itemCode)
         {
             //DateTime DateFrom = dateFrom == null ? new DateTime(1970, 1, 1) : (DateTime)dateFrom;
             //DateTime DateTo = dateTo == null ? DateTime.Now : (DateTime)dateTo;
@@ -251,7 +316,7 @@ namespace Com.Bateeq.Service.Warehouse.Lib.Facades
         //public Tuple<List<InventoryReportViewModel>, int> GetReport(string no, string unitId, string categoryId, string budgetId, string prStatus, string poStatus, DateTime? dateFrom, DateTime? dateTo, int page, int size, string Order, int offset, string username)
         public Tuple<List<InventoryMovementsReportViewModel>, int> GetMovements(string storageId, string itemCode, string info, string Order, int offset, string username, int page = 1, int size = 25)
         {
-            var Query = GetMovementQuery(storageId, itemCode, info, offset, username);
+            var Query = GetMovementQuery(storageId, itemCode);
 
             Dictionary<string, string> OrderDictionary = JsonConvert.DeserializeObject<Dictionary<string, string>>(Order);
             if (OrderDictionary.Count.Equals(0))
@@ -274,6 +339,56 @@ namespace Com.Bateeq.Service.Warehouse.Lib.Facades
             //return Tuple.Create(Data, Data.Count());
             return Tuple.Create(Data, TotalData);
 
+        }
+
+
+        public MemoryStream GenerateExcelReportByMovement(string storecode, string itemCode)
+        {
+            var Query = GetMovementQuery(storecode, itemCode);
+            // Query = Query.OrderByDescending(a => a.ReceiptDate);
+            DataTable result = new DataTable();
+            //No	Unit	Budget	Kategori	Tanggal PR	Nomor PR	Kode Barang	Nama Barang	Jumlah	Satuan	Tanggal Diminta Datang	Status	Tanggal Diminta Datang Eksternal
+
+            result.Columns.Add(new DataColumn() { ColumnName = "No", DataType = typeof(String) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Kode Toko", DataType = typeof(String) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Nama", DataType = typeof(String) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Barcode", DataType = typeof(String) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Nama Barang", DataType = typeof(String) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Tanggal", DataType = typeof(String) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Referensi", DataType = typeof(String) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Tipe", DataType = typeof(String) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Sebelum", DataType = typeof(double) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Kuantitas", DataType = typeof(double) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Setelah", DataType = typeof(double) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Keterangan", DataType = typeof(String) });
+
+
+
+
+            if (Query.ToArray().Count() == 0)
+                result.Rows.Add("", "", "", "", "", "", "", "",0, 0, 0,"");
+            // to allow column name to be generated properly for empty data as template
+            else
+            {
+
+                int index = 0;
+                foreach (var item in Query)
+                {
+                    index++;
+                    string date = item.Date == null ? "-" : item.Date.ToOffset(new TimeSpan(7, 0, 0)).ToString("dd MMM yyyy - HH:mm:ss", new CultureInfo("id-ID"));
+                    //string pr_date = item.PRDate == null ? "-" : item.PRDate.ToOffset(new TimeSpan(offset, 0, 0)).ToString("dd MMM yyyy", new CultureInfo("id-ID"));
+                    //string do_date = item.DODate == null ? "-" : item.ReceiptDate.ToOffset(new TimeSpan(offset, 0, 0)).ToString("dd MMM yyyy", new CultureInfo("id-ID"));
+
+                    result.Rows.Add(index, item.StorageCode, item.StorageName, item.ItemCode, item.ItemName, date, 
+                        item.Reference, item.Type, item.Before, item.Quantity, item.After, item.Remark);
+
+
+
+                }
+
+            }
+
+            return Excel.CreateExcel(new List<KeyValuePair<DataTable, string>>() { new KeyValuePair<DataTable, string>(result, "Territory") }, true);
         }
         #endregion
     }

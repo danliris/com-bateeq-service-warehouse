@@ -46,13 +46,37 @@ namespace Com.Bateeq.Service.Warehouse.Lib.Facades
 
         public Tuple<List<SPKDocs>, int, Dictionary<string, string>> Read(int Page = 1, int Size = 25, string Order = "{}", string Keyword = null, string Filter = "{}")
         {
-            IQueryable<SPKDocs> Query = this.dbSet.Include(x=>x.Items);
+            IQueryable<SPKDocs> Query = this.dbSet.Include(x=>x.Items).Where(x => !x.PackingList.Contains("EFR-FN")); ;
             
             List<string> searchAttributes = new List<string>()
             {
                 "PackingList", "SourceName", "DestinationName"
             };
             
+            Query = QueryHelper<SPKDocs>.ConfigureSearch(Query, searchAttributes, Keyword);
+
+            Dictionary<string, string> FilterDictionary = JsonConvert.DeserializeObject<Dictionary<string, string>>(Filter);
+            Query = QueryHelper<SPKDocs>.ConfigureFilter(Query, FilterDictionary);
+
+            Dictionary<string, string> OrderDictionary = JsonConvert.DeserializeObject<Dictionary<string, string>>(Order);
+            Query = QueryHelper<SPKDocs>.ConfigureOrder(Query, OrderDictionary);
+
+            Pageable<SPKDocs> pageable = new Pageable<SPKDocs>(Query, Page - 1, Size);
+            List<SPKDocs> Data = pageable.Data.ToList<SPKDocs>();
+            int TotalData = pageable.TotalCount;
+
+            return Tuple.Create(Data, TotalData, OrderDictionary);
+        }
+
+        public Tuple<List<SPKDocs>, int, Dictionary<string, string>> ReadForUpload(int Page = 1, int Size = 25, string Order = "{}", string Keyword = null, string Filter = "{}")
+        {
+            IQueryable<SPKDocs> Query = this.dbSet.Include(x => x.Items).Where(x => x.PackingList.Contains("EFR-FN"));
+
+            List<string> searchAttributes = new List<string>()
+            {
+                "PackingList", "SourceName", "DestinationName"
+            };
+
             Query = QueryHelper<SPKDocs>.ConfigureSearch(Query, searchAttributes, Keyword);
 
             Dictionary<string, string> FilterDictionary = JsonConvert.DeserializeObject<Dictionary<string, string>>(Filter);
@@ -123,6 +147,8 @@ namespace Com.Bateeq.Service.Warehouse.Lib.Facades
             {
                 try
                 {
+                    EntityExtension.FlagForCreate(model, username, USER_AGENT);
+
                     string packingList = GenerateCode("EFR-KB/PLB");
                     string code = GenerateCode("EFR-PK/PBJ");
                     string password = String.Join("",GenerateCode(DateTime.Now.ToString("dd")).Split("/"));
@@ -165,12 +191,12 @@ namespace Com.Bateeq.Service.Warehouse.Lib.Facades
 
                     }
                     model.Code = code;
+                    model.Date = new DateTimeOffset(model.CreatedUtc);
                     model.PackingList = packingList;
                     model.Password = password;
                     model.IsReceived = false;
                     model.IsDraft = false;
                     model.IsDistributed = false;
-                    EntityExtension.FlagForCreate(model, username, USER_AGENT);
 
                     dbSet.Add(model);
                     Created = await dbContext.SaveChangesAsync();
@@ -211,8 +237,6 @@ namespace Com.Bateeq.Service.Warehouse.Lib.Facades
         {
             "PackingList", "Password", "Barcode", "Name", "Size", "Price", "UOM", "QTY", "RO", "HPP"
         };
-
-
 
         public sealed class PkbjMap : CsvHelper.Configuration.ClassMap<SPKDocsCsvViewModel>
         {
@@ -412,7 +436,6 @@ namespace Com.Bateeq.Service.Warehouse.Lib.Facades
 
         public async Task<SPKDocsViewModel> MapToViewModel(List<SPKDocsCsvViewModel> csv, double source, string sourcec, string sourcen, double destination, string destinationc, string destinationn, DateTimeOffset date)
         {
-
             List<SPKDocsItemViewModel> sPKDocsItems = new List<SPKDocsItemViewModel>();
             //var itemx = GetItem();
 
@@ -477,6 +500,7 @@ namespace Com.Bateeq.Service.Warehouse.Lib.Facades
 
                         },
                         quantity = Convert.ToDouble(i.quantity),
+                        sendquantity = Convert.ToDouble(i.quantity),
                         remark = ""
                     });
                 }
@@ -497,6 +521,7 @@ namespace Com.Bateeq.Service.Warehouse.Lib.Facades
 
                         },
                         quantity = Convert.ToDouble(i.quantity),
+                        sendquantity = Convert.ToDouble(i.quantity),
                         remark = ""
                     });
                 }

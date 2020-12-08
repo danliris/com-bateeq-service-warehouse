@@ -11,9 +11,10 @@ using System;
 namespace Com.Bateeq.Service.Warehouse.Lib.Migrations
 {
     [DbContext(typeof(WarehouseDbContext))]
-    partial class WarehouseDbContextModelSnapshot : ModelSnapshot
+    [Migration("20201112012105_delete_date_adjustmentdoc")]
+    partial class delete_date_adjustmentdoc
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -629,6 +630,8 @@ namespace Com.Bateeq.Service.Warehouse.Lib.Migrations
 
                     b.Property<DateTime>("CreatedUtc");
 
+                    b.Property<DateTimeOffset>("Date");
+
                     b.Property<string>("DeletedAgent")
                         .IsRequired()
                         .HasMaxLength(255);
@@ -641,7 +644,7 @@ namespace Com.Bateeq.Service.Warehouse.Lib.Migrations
 
                     b.Property<bool>("IsDeleted");
 
-                    b.Property<bool>("IsProcessed");
+                    b.Property<bool>("IsProcess");
 
                     b.Property<string>("LastModifiedAgent")
                         .IsRequired()

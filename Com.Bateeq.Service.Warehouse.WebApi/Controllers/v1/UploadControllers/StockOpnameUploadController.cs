@@ -1,12 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Com.Bateeq.Service.Warehouse.Lib;
 using Com.Bateeq.Service.Warehouse.Lib.Services;
 using Com.Bateeq.Service.Warehouse.WebApi.Helpers;
-using Com.Bateeq.Service.Warehouse.Lib.Models;
-using Com.Bateeq.Service.Warehouse.Lib.ViewModels;
-using Com.Bateeq.Service.Warehouse.Lib.Facades;
 using Com.Bateeq.Service.Warehouse.Lib.Models.SPKDocsModel;
-using Com.Bateeq.Service.Warehouse.Lib.ViewModels.SpkDocsViewModel;
+
 using System.IO;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -15,25 +11,26 @@ using AutoMapper;
 using System.Linq;
 using CsvHelper;
 using Microsoft.AspNetCore.Authorization;
-using static Com.Bateeq.Service.Warehouse.Lib.Facades.PkpbjFacade;
-using Com.Bateeq.Service.Warehouse.Lib.Interfaces.PkbjInterfaces;
+using Com.Bateeq.Service.Warehouse.Lib.Interfaces.SOInterfaces;
+using Com.Bateeq.Service.Warehouse.Lib.ViewModels.SOViewModel;
+using Com.Bateeq.Service.Warehouse.Lib.Models.SOModel;
 
 namespace Com.MM.Service.Core.WebApi.Controllers.v1.UploadControllers
 {
     [Produces("application/json")]
     [ApiVersion("1.0")]
-    [Route("v{version:apiVersion}/warehouse/upload-pkbj")]
+    [Route("v{version:apiVersion}/warehouse/upload-so")]
     [Authorize]
-    public class PkpbjUploadController : Controller
+    public class StockOpnameUploadController : Controller
     //: BasicUploadController<PkpbjFacade, SPKDocs, SPKDocsViewModel, PkpbjFacade.PkbjMap, WarehouseDbContext>
     {
         private string ApiVersion = "1.0.0";
         private readonly IMapper mapper;
-        private readonly IPkpbjFacade facade;
+        private readonly ISODoc facade;
         private readonly IdentityService identityService;
         private readonly string ContentType = "application/vnd.openxmlformats";
         private readonly string FileName = string.Concat("Error Log - ", typeof(SPKDocs).Name, " ", DateTime.Now.ToString("dd MMM yyyy"), ".csv");
-        public PkpbjUploadController(IMapper mapper, IPkpbjFacade facade, IdentityService identityService) //: base(facade, ApiVersion)
+        public StockOpnameUploadController(IMapper mapper, ISODoc facade, IdentityService identityService) //: base(facade, ApiVersion)
         {
             this.mapper = mapper;
             this.facade = facade;
@@ -52,7 +49,7 @@ namespace Com.MM.Service.Core.WebApi.Controllers.v1.UploadControllers
 
         //};
         [HttpPost("upload")]
-        public async Task<IActionResult> PostCSVFileAsync(double source, string sourcec, string sourcen, double destination, string destinationc, string destinationn, DateTimeOffset date)
+        public async Task<IActionResult> PostCSVFileAsync(string source)
         // public async Task<IActionResult> PostCSVFileAsync(double source, double destination,  DateTime date)
         {
             try
@@ -76,12 +73,12 @@ namespace Com.MM.Service.Core.WebApi.Controllers.v1.UploadControllers
                         CsvReader Csv = new CsvReader(Reader);
                         Csv.Configuration.IgnoreQuotes = false;
                         Csv.Configuration.Delimiter = ",";
-                        Csv.Configuration.RegisterClassMap<PkbjMap>();
+                        Csv.Configuration.RegisterClassMap<Bateeq.Service.Warehouse.Lib.Facades.SOFacade.SOMap>();
                         Csv.Configuration.HeaderValidated = null;
 
-                        List<SPKDocsCsvViewModel> Data = Csv.GetRecords<SPKDocsCsvViewModel>().ToList();
+                        List<SODocsCsvViewModel> Data = Csv.GetRecords<SODocsCsvViewModel>().ToList();
 
-                        SPKDocsViewModel Data1 = await facade.MapToViewModel(Data, source, sourcec, sourcen, destination, destinationc, destinationn, date);
+                        SODocsViewModel Data1 = await facade.MapToViewModel(Data, source);
 
                         Tuple<bool, List<object>> Validated = facade.UploadValidate(ref Data, Request.Form.ToList());
 
@@ -89,7 +86,7 @@ namespace Com.MM.Service.Core.WebApi.Controllers.v1.UploadControllers
 
                         if (Validated.Item1) /* If Data Valid */
                         {
-                            SPKDocs data = mapper.Map<SPKDocs>(Data1);
+                            SODocs data = mapper.Map<SODocs>(Data1);
                             //foreach (var item in data)
                             //{
                             //    Transfrom(item);
@@ -112,7 +109,6 @@ namespace Com.MM.Service.Core.WebApi.Controllers.v1.UploadControllers
                                 {
                                     csvWriter.WriteRecords(Validated.Item2);
                                 }
-
                                 return File(memoryStream.ToArray(), ContentType, FileName);
                             }
                         }
@@ -143,72 +139,5 @@ namespace Com.MM.Service.Core.WebApi.Controllers.v1.UploadControllers
                 return StatusCode(General.INTERNAL_ERROR_STATUS_CODE, Result);
             }
         }
-
-        [HttpGet]
-        public IActionResult Get(int page = 1, int size = 25, string order = "{}", string keyword = null, string filter = "{}")
-        {
-            identityService.Username = User.Claims.Single(p => p.Type.Equals("username")).Value;
-
-            try
-            {
-                string filterUser = string.Concat("'CreatedBy':'", identityService.Username, "'");
-                if (filter == null || !(filter.Trim().StartsWith("{") && filter.Trim().EndsWith("}")) || filter.Replace(" ", "").Equals("{}"))
-                {
-                    filter = string.Concat("{", filterUser, "}");
-                }
-                else
-                {
-                    filter = filter.Replace("}", string.Concat(", ", filterUser, "}"));
-                }
-
-                var Data = facade.ReadForUpload(page, size, order, keyword, filter);
-
-                var newData = mapper.Map<List<SPKDocsViewModel>>(Data.Item1);
-
-                List<object> listData = new List<object>();
-                listData.AddRange(
-                    newData.AsQueryable().Select(s => new
-                    {
-                        s._id,
-                        s.packingList,
-                        s.date,
-                        s.password,
-                        s.reference,
-                        SourceCode = s.source.code,
-                        SourceName = s.source.name,
-                        DestinationCode = s.destination.code,
-                        DestinationName = s.destination.name,
-                        s.isReceived,
-                    }).ToList()
-                );
-
-                return Ok(new
-                {
-                    apiVersion = ApiVersion,
-                    statusCode = General.OK_STATUS_CODE,
-                    message = General.OK_MESSAGE,
-                    data = listData,
-                    info = new Dictionary<string, object>
-                    {
-                        { "count", listData.Count },
-                        { "total", Data.Item2 },
-                        { "order", Data.Item3 },
-                        { "page", page },
-                        { "size", size }
-                    },
-                });
-            }
-            catch (Exception e)
-            {
-                Dictionary<string, object> Result =
-                    new ResultFormatter(ApiVersion, General.INTERNAL_ERROR_STATUS_CODE, e.Message)
-                    .Fail();
-                return StatusCode(General.INTERNAL_ERROR_STATUS_CODE, Result);
-            }
-        }
-
-
     }
-
-
 }

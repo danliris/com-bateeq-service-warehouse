@@ -35,7 +35,7 @@ namespace Com.MM.Service.Warehouse.WebApi.Controllers.v1.InventoryControllers
         #region By User
         [HttpGet("by-user")]
         //public IActionResult GetReport(string no, string unitId, string categoryId, string budgetId, string prStatus, string poStatus, DateTime? dateFrom, DateTime? dateTo, int page, int size, string Order = "{}")
-        public IActionResult GetReport(string storageId, string itemName, int page = 1, int size = 25, string Order = "{}")
+        public IActionResult GetReport(string storageId, string filter, int page = 1, int size = 25, string Order = "{}")
         {
             int offset = Convert.ToInt32(Request.Headers["x-timezone-offset"]);
             identityService.Username = User.Claims.Single(p => p.Type.Equals("username")).Value;
@@ -44,7 +44,7 @@ namespace Com.MM.Service.Warehouse.WebApi.Controllers.v1.InventoryControllers
             try
             {
 
-                var data = facade.GetReport(storageId, itemName, page, size, Order, offset, identityService.Username);
+                var data = facade.GetReport(storageId, filter, page, size, Order, offset, identityService.Username);
 
                 return Ok(new
                 {
@@ -54,6 +54,39 @@ namespace Com.MM.Service.Warehouse.WebApi.Controllers.v1.InventoryControllers
                     message = General.OK_MESSAGE,
                     statusCode = General.OK_STATUS_CODE
                 });
+            }
+            catch (Exception e)
+            {
+                Dictionary<string, object> Result =
+                    new ResultFormatter(ApiVersion, General.INTERNAL_ERROR_STATUS_CODE, e.Message)
+                    .Fail();
+                return StatusCode(General.INTERNAL_ERROR_STATUS_CODE, Result);
+            }
+        }
+
+
+
+        [HttpGet("by-user/download")]
+        public IActionResult GetXls(string storageId, string filter)
+        {
+
+            try
+            {
+                byte[] xlsInBytes;
+                //int offset = Convert.ToInt32(Request.Headers["x-timezone-offset"]);
+                //DateTime DateFrom = dateFrom == null ? new DateTime(1970, 1, 1) : Convert.ToDateTime(dateFrom);
+                //DateTime DateTo = dateTo == null ? DateTime.Now : Convert.ToDateTime(dateTo);
+                string filename;
+
+                var xls = facade.GenerateExcelReportByUser(storageId, filter);
+
+
+                filename = String.Format("Repoort Monthly Stock{0}.xlsx", DateTime.UtcNow.ToString("dd-MMM-yyyy"));
+
+                xlsInBytes = xls.ToArray();
+                var file = File(xlsInBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", filename);
+                return file;
+
             }
             catch (Exception e)
             {
@@ -120,6 +153,38 @@ namespace Com.MM.Service.Warehouse.WebApi.Controllers.v1.InventoryControllers
                     message = General.OK_MESSAGE,
                     statusCode = General.OK_STATUS_CODE
                 });
+            }
+            catch (Exception e)
+            {
+                Dictionary<string, object> Result =
+                    new ResultFormatter(ApiVersion, General.INTERNAL_ERROR_STATUS_CODE, e.Message)
+                    .Fail();
+                return StatusCode(General.INTERNAL_ERROR_STATUS_CODE, Result);
+            }
+        }
+
+
+        [HttpGet("by-movements/download")]
+        public IActionResult GetMovementXls(string storageId, string itemCode)
+        {
+
+            try
+            {
+                byte[] xlsInBytes;
+                //int offset = Convert.ToInt32(Request.Headers["x-timezone-offset"]);
+                //DateTime DateFrom = dateFrom == null ? new DateTime(1970, 1, 1) : Convert.ToDateTime(dateFrom);
+                //DateTime DateTo = dateTo == null ? DateTime.Now : Convert.ToDateTime(dateTo);
+                string filename;
+
+                var xls = facade.GenerateExcelReportByMovement(storageId, itemCode);
+
+
+                filename = String.Format("Report Movement Stock- {0}.xlsx", DateTime.UtcNow.ToString("dd-MMM-yyyy"));
+
+                xlsInBytes = xls.ToArray();
+                var file = File(xlsInBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", filename);
+                return file;
+
             }
             catch (Exception e)
             {
