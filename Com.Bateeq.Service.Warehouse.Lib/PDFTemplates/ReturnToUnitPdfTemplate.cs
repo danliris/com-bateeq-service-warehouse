@@ -75,7 +75,9 @@ namespace Com.Bateeq.Service.Warehouse.Lib.PDFTemplates
             PdfPCell cellInternNoteHeaderLeft = new PdfPCell() { Border = Rectangle.NO_BORDER, HorizontalAlignment = Element.ALIGN_LEFT };
             PdfPCell cellInternNoteHeaderRight = new PdfPCell() { Border = Rectangle.NO_BORDER, HorizontalAlignment = Element.ALIGN_LEFT };
 
-            cellInternNoteHeaderLeft.Phrase = new Phrase("PT EFRATA RETAILINDO", bold_font1);
+
+            cellInternNoteHeaderLeft.Phrase = new Phrase("PT. PT EFRATA RETAILINDO", bold_font1);
+
             tableInternNoteHeader.AddCell(cellInternNoteHeaderLeft);
 
             cellInternNoteHeaderLeft.Phrase = new Phrase("No. Packing List" + "       : " + pkbjByUserViewModel.packingList, normal_font);
