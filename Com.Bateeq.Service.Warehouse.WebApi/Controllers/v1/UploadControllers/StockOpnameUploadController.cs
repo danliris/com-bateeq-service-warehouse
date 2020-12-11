@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Com.Bateeq.Service.Warehouse.Lib.Services;
 using Com.Bateeq.Service.Warehouse.WebApi.Helpers;
-using Com.Bateeq.Service.Warehouse.Lib.Models.SPKDocsModel;
 
 using System.IO;
 using System.Collections.Generic;
@@ -29,7 +28,7 @@ namespace Com.MM.Service.Core.WebApi.Controllers.v1.UploadControllers
         private readonly ISODoc facade;
         private readonly IdentityService identityService;
         private readonly string ContentType = "application/vnd.openxmlformats";
-        private readonly string FileName = string.Concat("Error Log - ", typeof(SPKDocs).Name, " ", DateTime.Now.ToString("dd MMM yyyy"), ".csv");
+        private readonly string FileName = string.Concat("Error Log - ", typeof(SODocs).Name, " ", DateTime.Now.ToString("dd MMM yyyy"), ".csv");
         public StockOpnameUploadController(IMapper mapper, ISODoc facade, IdentityService identityService) //: base(facade, ApiVersion)
         {
             this.mapper = mapper;
@@ -78,14 +77,13 @@ namespace Com.MM.Service.Core.WebApi.Controllers.v1.UploadControllers
 
                         List<SODocsCsvViewModel> Data = Csv.GetRecords<SODocsCsvViewModel>().ToList();
 
-                        SODocsViewModel Data1 = await facade.MapToViewModel(Data, source);
-
-                        Tuple<bool, List<object>> Validated = facade.UploadValidate(ref Data, Request.Form.ToList());
+                        Tuple<bool, List<object>> Validated = facade.UploadValidate(ref Data, Request.Form.ToList(), source);
 
                         Reader.Close();
 
                         if (Validated.Item1) /* If Data Valid */
                         {
+                            SODocsViewModel Data1 = await facade.MapToViewModel(Data, source);
                             SODocs data = mapper.Map<SODocs>(Data1);
                             //foreach (var item in data)
                             //{
@@ -98,7 +96,6 @@ namespace Com.MM.Service.Core.WebApi.Controllers.v1.UploadControllers
                                 new ResultFormatter(ApiVersion, General.CREATED_STATUS_CODE, General.OK_MESSAGE)
                                 .Ok();
                             return Created(HttpContext.Request.Path, Result);
-
                         }
                         else
                         {
