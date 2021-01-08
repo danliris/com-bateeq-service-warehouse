@@ -111,8 +111,8 @@ namespace Com.Bateeq.Service.Warehouse.Lib.Facades
 
             var Query = (from a in dbContext.Inventories
                          where a.IsDeleted == false
-                         //&& a.StorageId == Convert.ToInt64((string.IsNullOrWhiteSpace(storageId) ? a.StorageId.ToString() :  storageId))
-                         && a.StorageCode == (string.IsNullOrWhiteSpace(storageId) ? a.StorageCode : storageId)
+                         && a.StorageId == Convert.ToInt64((string.IsNullOrWhiteSpace(storageId) ? a.StorageId.ToString() :  storageId))
+                         //&& a.StorageCode == (string.IsNullOrWhiteSpace(storageId) ? a.StorageCode : storageId)
                          //&& a.ItemName.Contains((string.IsNullOrWhiteSpace(filter) ? a.ItemName : filter))
                          //|| a.ItemArticleRealizationOrder.Contains((string.IsNullOrWhiteSpace(filter) ? a.ItemArticleRealizationOrder : filter))
 
