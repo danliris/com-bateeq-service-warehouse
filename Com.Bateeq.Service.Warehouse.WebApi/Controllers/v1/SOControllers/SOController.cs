@@ -139,6 +139,54 @@ namespace Com.Bateeq.Service.Warehouse.WebApi.Controllers.v1.SOControllers
             }
         }
 
+        //[HttpGet("download")]
+        //public IActionResult DownloadTemplate()
+        //{
+        //    try
+        //    {
+        //        byte[] csvInBytes;
+        //        var csv = facade.DownloadTemplate();
+
+        //        string fileName = "Stock Opname Template.csv";
+
+        //        csvInBytes = csv.ToArray();
+
+        //        var file = File(csvInBytes, "text/csv", fileName);
+        //        return file;
+        //    }
+        //    catch (Exception e)
+        //    {
+        //        Dictionary<string, object> Result =
+        //          new ResultFormatter(ApiVersion, General.INTERNAL_ERROR_STATUS_CODE, e.Message)
+        //          .Fail();
+        //        return StatusCode(General.INTERNAL_ERROR_STATUS_CODE, Result);
+        //    }
+        //}
+
+        [HttpGet("download")]
+        public IActionResult DownloadTemplate(string code)
+        {
+            try
+            {
+                byte[] csvInBytes;
+                var csv = facade.DownloadTemplate();
+
+                string fileName = "Stock Opname Template.csv";
+
+                csvInBytes = csv.ToArray();
+
+                var file = File(csvInBytes, "text/csv", fileName);
+                return file;
+            }
+            catch (Exception e)
+            {
+                Dictionary<string, object> Result =
+                  new ResultFormatter(ApiVersion, General.INTERNAL_ERROR_STATUS_CODE, e.Message)
+                  .Fail();
+                return StatusCode(General.INTERNAL_ERROR_STATUS_CODE, Result);
+            }
+        }
+
         [HttpPut]
         public async Task<IActionResult> Process([FromBody]SODocsViewModel ViewModel)
         {

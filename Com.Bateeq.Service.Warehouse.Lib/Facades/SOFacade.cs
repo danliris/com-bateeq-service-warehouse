@@ -9,6 +9,7 @@ using Com.Bateeq.Service.Warehouse.Lib.ViewModels.NewIntegrationViewModel;
 using Com.Bateeq.Service.Warehouse.Lib.ViewModels.SOViewModel;
 using Com.Moonlay.Models;
 using Com.Moonlay.NetCore.Lib;
+using CsvHelper;
 using CsvHelper.TypeConversion;
 using HashidsNet;
 using Microsoft.EntityFrameworkCore;
@@ -18,6 +19,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Dynamic;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
@@ -74,16 +76,42 @@ namespace Com.Bateeq.Service.Warehouse.Lib.Facades
             }
         }
 
-        public Tuple<bool, List<object>> UploadValidate(ref List<SODocsCsvViewModel> Data, List<KeyValuePair<string, StringValues>> Body)
+        public MemoryStream DownloadTemplate()
+        {
+            using (MemoryStream stream = new MemoryStream())
+            {
+                using (var streamWriter = new StreamWriter(stream))
+                {
+
+                    using (var csvWriter = new CsvWriter(streamWriter))
+                    {
+                        foreach (var item in CsvHeader)
+                        {
+                            csvWriter.WriteField(item);
+                        }
+                        csvWriter.NextRecord();
+                    }
+                }
+                return stream;
+            }
+        }
+
+        public Tuple<bool, List<object>> UploadValidate(ref List<SODocsCsvViewModel> Data, List<KeyValuePair<string, StringValues>> Body, string source)
         {
             List<object> ErrorList = new List<object>();
             string ErrorMessage;
             bool Valid = true;
+            var storages = GetStorage(source);
 
             foreach (SODocsCsvViewModel productVM in Data)
             {
+                var item = dbContext.Inventories.Where(x => x.ItemCode == productVM.code && x.StorageId == storages.Id).FirstOrDefault();
                 ErrorMessage = "";
 
+                if (item == null)
+                {
+                    ErrorMessage = string.Concat(ErrorMessage, "Barang tidak ditemukan, ");
+                }
                 if (string.IsNullOrWhiteSpace(productVM.code))
                 {
                     ErrorMessage = string.Concat(ErrorMessage, "Barcode tidak boleh kosong, ");
@@ -120,6 +148,7 @@ namespace Com.Bateeq.Service.Warehouse.Lib.Facades
                     Error.Add("Barcode", productVM.code);
                     Error.Add("Nama Barang", productVM.name);
                     Error.Add("Kuantitas Stock", productVM.quantity);
+                    Error.Add("Error", ErrorMessage);
                     ErrorList.Add(Error);
                 }
             }
