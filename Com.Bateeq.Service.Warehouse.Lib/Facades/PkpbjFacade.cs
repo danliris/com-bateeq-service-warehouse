@@ -431,6 +431,7 @@ namespace Com.Bateeq.Service.Warehouse.Lib.Facades
             EntityExtension.FlagForCreate(data, username, USER_AGENT);
             dbSet.Add(data);
             var result = await dbContext.SaveChangesAsync();
+
             //await BulkInsert(data, username);
         }
 
@@ -444,39 +445,25 @@ namespace Com.Bateeq.Service.Warehouse.Lib.Facades
                 var itemx = GetItem(i.code);
                 if (itemx.Count() == 0 || itemx == null)
                 {
-                    //item = new ViewModels.NewIntegrationViewModel.ItemViewModel
-                    //{
-                        //articleRealizationOrder = i.articleRealizationOrder,
-                        //_id = itemx.Id,
-                        //code = i.code,
-                        //domesticCOGS = Convert.ToDouble(i.domesticCOGS),
-                        //domesticSale = Convert.ToDouble(i.domesticSale),
-                        //name = i.name,
-                        //size = i.size,
-                        //uom = i.uom
+                    ItemCoreViewModel item = new ItemCoreViewModel
+                    {
+                        dataDestination = new List<ItemViewModelRead>
+                            {
+                               new ItemViewModelRead
+                               {
+                                   ArticleRealizationOrder = i.articleRealizationOrder,
+                                   code = i.code,
+                                   name = i.name,
+                                   Size = i.size,
+                                   Uom = i.uom,
+                               }
+                            },
+                        DomesticCOGS = Convert.ToDouble(i.domesticCOGS),
+                        DomesticRetail = 0,
+                        DomesticSale = Convert.ToDouble(i.domesticSale),
+                        DomesticWholesale = 0,
+                    };
 
-                    //},
-                    //quantity = Convert.ToDouble(i.quantity),
-                    //remark = ""
-                //});
-                ItemCoreViewModel item = new ItemCoreViewModel
-                {
-                    dataDestination = new List<ItemViewModelRead>
-                        {
-                           new ItemViewModelRead
-                           {
-                               ArticleRealizationOrder = i.articleRealizationOrder,
-                               code = i.code,
-                               name = i.name,
-                               Size = i.size,
-                               Uom = i.uom,
-                           }
-                        },
-                    DomesticCOGS = Convert.ToDouble(i.domesticCOGS),
-                    DomesticRetail = 0,
-                    DomesticSale = Convert.ToDouble(i.domesticSale),
-                    DomesticWholesale = 0,
-                };
                     string itemsUri = "items/finished-goods";
                     var httpClient = (IHttpClientService)serviceProvider.GetService(typeof(IHttpClientService));
                     var response = await httpClient.PostAsync($"{APIEndpoint.Core}{itemsUri}", new StringContent(JsonConvert.SerializeObject(item).ToString(), Encoding.UTF8, General.JsonMediaType));
@@ -497,12 +484,27 @@ namespace Com.Bateeq.Service.Warehouse.Lib.Facades
                             name = i.name,
                             size = i.size,
                             uom = i.uom
-
                         },
                         quantity = Convert.ToDouble(i.quantity),
                         sendquantity = Convert.ToDouble(i.quantity),
                         remark = ""
                     });
+
+                    //item = new ViewModels.NewIntegrationViewModel.ItemViewModel
+                    //{
+                    //articleRealizationOrder = i.articleRealizationOrder,
+                    //_id = itemx.Id,
+                    //code = i.code,
+                    //domesticCOGS = Convert.ToDouble(i.domesticCOGS),
+                    //domesticSale = Convert.ToDouble(i.domesticSale),
+                    //name = i.name,
+                    //size = i.size,
+                    //uom = i.uom
+
+                    //},
+                    //quantity = Convert.ToDouble(i.quantity),
+                    //remark = ""
+                    //});
                 }
                 else
                 {
@@ -558,7 +560,7 @@ namespace Com.Bateeq.Service.Warehouse.Lib.Facades
 
         private List<ItemCoreViewModel> GetItem(string itemCode)
         {
-            string itemUri = "items/finished-goods/Code";
+            string itemUri = "items/finished-goods/code";
             IHttpClientService httpClient = (IHttpClientService)serviceProvider.GetService(typeof(IHttpClientService));
 
             var response = httpClient.GetAsync($"{APIEndpoint.Core}{itemUri}/{itemCode}").Result;

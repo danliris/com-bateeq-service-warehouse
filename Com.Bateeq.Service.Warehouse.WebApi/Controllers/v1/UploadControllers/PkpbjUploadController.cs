@@ -55,8 +55,8 @@ namespace Com.MM.Service.Core.WebApi.Controllers.v1.UploadControllers
         public async Task<IActionResult> PostCSVFileAsync(double source, string sourcec, string sourcen, double destination, string destinationc, string destinationn, DateTimeOffset date)
         // public async Task<IActionResult> PostCSVFileAsync(double source, double destination,  DateTime date)
         {
-            try
-            {
+            //try
+            //{
                 identityService.Username = User.Claims.Single(p => p.Type.Equals("username")).Value;
                 identityService.Token = Request.Headers["Authorization"].FirstOrDefault().Replace("Bearer ", "");
                 identityService.TimezoneOffset = Convert.ToInt32(Request.Headers["x-timezone-offset"]);
@@ -90,18 +90,17 @@ namespace Com.MM.Service.Core.WebApi.Controllers.v1.UploadControllers
                         if (Validated.Item1) /* If Data Valid */
                         {
                             SPKDocs data = mapper.Map<SPKDocs>(Data1);
-                            //foreach (var item in data)
-                            //{
-                            //    Transfrom(item);
-                            //}
                             await facade.UploadData(data, identityService.Username);
-
 
                             Dictionary<string, object> Result =
                                 new ResultFormatter(ApiVersion, General.CREATED_STATUS_CODE, General.OK_MESSAGE)
                                 .Ok();
                             return Created(HttpContext.Request.Path, Result);
 
+                            //foreach (var item in data)
+                            //{
+                            //    Transfrom(item);
+                            //}
                         }
                         else
                         {
@@ -133,15 +132,15 @@ namespace Com.MM.Service.Core.WebApi.Controllers.v1.UploadControllers
                             .Fail();
                     return BadRequest(Result);
                 }
-            }
-            catch (Exception e)
-            {
-                Dictionary<string, object> Result =
-                   new ResultFormatter(ApiVersion, General.INTERNAL_ERROR_STATUS_CODE, e.Message)
-                   .Fail();
+            //}
+            //catch (Exception e)
+            //{
+            //    Dictionary<string, object> Result =
+            //       new ResultFormatter(ApiVersion, General.INTERNAL_ERROR_STATUS_CODE, e.Message)
+            //       .Fail();
 
-                return StatusCode(General.INTERNAL_ERROR_STATUS_CODE, Result);
-            }
+            //    return StatusCode(General.INTERNAL_ERROR_STATUS_CODE, Result);
+            //}
         }
 
         [HttpGet]

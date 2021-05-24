@@ -21,6 +21,7 @@ namespace Com.Bateeq.Service.Warehouse.WebApi.Helpers
         public const string USERNAME = "AdminUsername";
         public const string PASSWORD = "Password";
         public const string GARMENT_PRODUCTION_ENDPOINT = "GarmentProductionEndpoint";
+        public const string POS_ENDPOINT = "PosEndpoint";
 
 
         public const string CATEGORIES = "Categories";
